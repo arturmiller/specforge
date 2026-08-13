@@ -1,0 +1,1138 @@
+Du bist Principal Software Architect, Knowledge-Representation Engineer und AI Coding Agent. Deine Aufgabe ist es, einen prototypischen „Requirements & Compliance Compiler“ zu entwerfen und anschließend zu implementieren.
+
+## Ziel
+
+Ich möchte Software nicht primär aus freien Prompts generieren, sondern aus einer Kombination aus:
+
+1. produktspezifischen Anforderungen,
+2. Domänenwissen,
+3. zentral gepflegten Querschnittsanforderungen,
+4. regulatorischen Anforderungen,
+5. technischen Implementierungsmustern.
+
+Das System soll aus diesen Eingaben eine aufgelöste Systemspezifikation erzeugen und daraus Software, Tests und nachvollziehbare Compliance-Evidenz ableiten können.
+
+Der erste vollständige Use Case soll eine kleine Kalender-Webanwendung sein.
+
+WICHTIG:
+Beginne NICHT sofort mit der Implementierung.
+
+Deine erste Aufgabe ist ausschließlich:
+
+* das Problem strukturiert zu analysieren,
+* eine sinnvolle Architektur vorzuschlagen,
+* Alternativen und Trade-offs zu erläutern,
+* einen schrittweisen Implementierungsplan vorzulegen,
+* klar zu erklären, welche Rolle Ontologien, Regeln, Knowledge Graph, Requirements und KI jeweils spielen,
+* und mir anschließend konkrete Rückfragen oder Entscheidungen vorzulegen, falls wirklich notwendig.
+
+Erst nachdem ich das Vorgehen bestätigt habe, sollst du mit der Implementierung beginnen.
+
+---
+
+# 1. Grundidee
+
+Das System soll sich eher wie ein Compiler als wie ein klassischer Codegenerator verhalten.
+
+Konzeptionelle Pipeline:
+
+```text
+Product Intent
+      ↓
+Product Model / Product Requirements
+      ↓
+Semantic Enrichment
+      ↓
+Ontology / Domain Knowledge
+      ↓
+Rule Resolution
+      ↓
+Derived Requirements
+      ↓
+Resolved System Specification
+      ↓
+Architecture / Implementation Patterns
+      ↓
+Code + Infrastructure + Tests
+      ↓
+Validation
+      ↓
+Compliance / Traceability Evidence
+```
+
+Der entscheidende Punkt ist:
+
+Ein Entwickler oder Agent soll nur die produktspezifische Absicht definieren müssen.
+
+Querschnittsanforderungen sollen von spezialisierten Teams zentral gepflegt werden können.
+
+Beispiele:
+
+* Security
+* Datenschutz / DSGVO
+* Accessibility
+* Observability
+* Architektur
+* Plattformvorgaben
+* später regulatorische Domänen wie MaKo
+
+Diese Anforderungen sollen automatisch auf Produkte angewendet werden.
+
+---
+
+# 2. Beispiel für die gewünschte Ableitung
+
+Angenommen, die Produktspezifikation beschreibt:
+
+```text
+Calendar
+
+Entity:
+Event
+
+Event contains:
+- title
+- description
+- participants
+- location
+
+Feature:
+User can view own events.
+```
+
+Das System soll semantisch erkennen können:
+
+```text
+Participant
+→ Person
+→ PersonalData
+```
+
+Daraus sollen Regeln beispielsweise ableiten:
+
+```text
+Event contains PersonalData
+→ access requires authentication
+
+Event belongs to User
+→ access requires authorization
+
+PersonalData
+→ transport encryption required
+
+PersonalData
+→ privacy requirements apply
+```
+
+Dadurch entstehen automatisch zusätzliche Anforderungen.
+
+Beispiel:
+
+```text
+PRODUCT-001
+User can view own events.
+
+SEC-001
+Access to resources containing personal data requires authentication.
+
+SEC-002
+A user may access only resources they are authorized to access.
+
+PRIVACY-001
+Personal data must have an identified processing purpose.
+```
+
+Die finale Systemspezifikation könnte dann beispielsweise enthalten:
+
+```yaml
+endpoint:
+  method: GET
+  path: /events/{id}
+
+resource:
+  type: Event
+  classification:
+    - PersonalData
+
+requirements:
+  - PRODUCT-001
+  - SEC-001
+  - SEC-002
+  - PRIVACY-001
+
+controls:
+  authentication: required
+  authorization:
+    type: ownership
+```
+
+---
+
+# 3. Trennung der Verantwortlichkeiten
+
+Das System soll unterschiedliche „Owner“ für Wissen unterstützen.
+
+Beispielsweise:
+
+```text
+product/
+security/
+privacy/
+platform/
+architecture/
+domain/
+```
+
+Diese Bereiche sollen logisch und möglichst auch technisch getrennt sein.
+
+Langfristig sollen unterschiedliche Teams eigene Repositories pflegen können.
+
+Beispiel:
+
+```text
+security-rules repository
+
+privacy-rules repository
+
+platform-patterns repository
+
+calendar-product repository
+```
+
+Das Produktteam darf die Security-Regeln nicht verändern.
+
+Ein Coding-Agent soll gegebenenfalls Schreibzugriff auf den Anwendungscode haben, aber nur Lesezugriff auf zentrale Compliance-Regeln.
+
+Berücksichtige deshalb Versionierung, Ownership und Dependency Management bereits im Design, auch wenn der erste Prototyp zunächst in einem Monorepo umgesetzt wird.
+
+---
+
+# 4. Anforderungen versus Implementierungsmuster
+
+Trenne strikt zwischen:
+
+## Requirement
+
+Beispiel:
+
+```text
+Resources containing personal data require authenticated access.
+```
+
+und:
+
+## Implementation Pattern
+
+Beispiel:
+
+```text
+For REST APIs:
+JWT authentication via an API gateway or application middleware satisfies authentication requirement SEC-001.
+```
+
+Eine fachliche oder regulatorische Regel darf nicht direkt von einer bestimmten Technologie wie OAuth, Cognito, Keycloak oder AWS API Gateway abhängen.
+
+Technologien sollen austauschbare Implementierungsmuster sein.
+
+---
+
+# 5. Ontologien
+
+Prüfe kritisch, an welchen Stellen echte Ontologien sinnvoll sind.
+
+Nutze Ontologien insbesondere für:
+
+* Begriffe,
+* Typen,
+* Taxonomien,
+* Beziehungen,
+* semantische Vererbung,
+* Ableitung von Eigenschaften.
+
+Beispiele:
+
+```text
+IBAN
+isA FinancialIdentifier
+
+FinancialIdentifier
+isA PersonalData
+```
+
+oder:
+
+```text
+EventParticipant
+isA Person
+
+Person
+has PersonalData
+```
+
+Versuche NICHT, sämtliche Regeln zwanghaft in OWL/RDF auszudrücken.
+
+Erkläre, welche Teile sinnvollerweise über:
+
+* RDF/OWL,
+* SHACL,
+* eigene Regel-DSL,
+* Datalog,
+* OPA/Rego,
+* DMN,
+* Python-Regeln
+
+abgebildet werden sollten.
+
+Wähle für den MVP die pragmatischste Lösung.
+
+Das System soll nicht akademisch komplexer sein als notwendig.
+
+---
+
+# 6. Expertensystem / Rule Engine
+
+Ein zentraler Bestandteil soll ein deterministischer Requirement Resolver sein.
+
+Konzeptionell:
+
+```text
+Facts
++
+Ontology-derived facts
++
+Rules
+=
+Derived Requirements
+```
+
+Beispiel:
+
+```text
+FACT:
+Endpoint returns Event
+
+ONTOLOGY:
+Event contains Participant
+Participant is Person
+Person is PersonalData
+
+DERIVED FACT:
+Endpoint returns PersonalData
+
+RULE:
+IF
+  endpoint exposure == external
+  AND endpoint returns PersonalData
+THEN
+  require Authentication
+```
+
+Der Resolver soll deterministisch arbeiten.
+
+LLMs dürfen NICHT entscheiden, ob eine formalisierte Security-Regel erfüllt ist.
+
+LLMs können unterstützen bei:
+
+* Extraktion,
+* Übersetzung natürlicher Sprache in formale Modelle,
+* Codegenerierung,
+* Erklärung,
+* Vorschlägen.
+
+Aber die eigentliche Auswertung formalisierter Regeln soll reproduzierbar und deterministisch sein.
+
+---
+
+# 7. Declared und Derived Requirements
+
+Unterscheide explizit zwischen:
+
+## Declared Requirements
+
+Vom Produktteam direkt angegebene Anforderungen.
+
+Beispiel:
+
+```text
+User can create an event.
+```
+
+## Derived Requirements
+
+Durch Regeln automatisch abgeleitete Anforderungen.
+
+Beispiel:
+
+```text
+Creating an event requires authentication.
+```
+
+Jede abgeleitete Anforderung muss erklären können:
+
+* warum sie gilt,
+* aus welcher Regel sie stammt,
+* welche Fakten die Regel ausgelöst haben,
+* welche Quelle die Regel besitzt,
+* welche Implementierung sie erfüllt,
+* welche Tests bzw. Evidenzen sie verifizieren.
+
+---
+
+# 8. Traceability Graph
+
+Das System soll einen nachvollziehbaren Graphen erzeugen.
+
+Beispiel:
+
+```text
+Security Policy
+       ↓
+SEC-001
+       ↓
+applies because
+       ↓
+Event contains PersonalData
+       ↓
+implemented by
+       ↓
+JWT Authentication Middleware
+       ↓
+verified by
+       ↓
+test_anonymous_user_cannot_read_event
+       ↓
+PASS
+```
+
+Eine zentrale Frage des Systems soll beantwortbar sein:
+
+```text
+Warum gilt diese Anforderung?
+```
+
+und:
+
+```text
+Warum betrachtet das System diese Anforderung als erfüllt?
+```
+
+Ein Requirement darf nicht einfach den Status „compliant“ erhalten.
+
+Stattdessen sollen beispielsweise Statuswerte existieren wie:
+
+```text
+NOT_EVALUATED
+REQUIRED
+IMPLEMENTED
+VERIFIED
+FAILED
+HUMAN_REVIEW_REQUIRED
+```
+
+---
+
+# 9. Grenzen des Compliance-Nachweises
+
+Das System darf niemals pauschal behaupten:
+
+```text
+Die Anwendung ist DSGVO-konform.
+```
+
+Stattdessen soll es präzise Aussagen treffen können wie:
+
+```text
+Alle für dieses System formalisierten und automatisch verifizierbaren Anforderungen wurden erfolgreich geprüft.
+```
+
+Bestimmte Anforderungen müssen als nicht vollständig maschinell entscheidbar markiert werden können.
+
+Zum Beispiel:
+
+```yaml
+verification:
+  type: human_review
+```
+
+oder:
+
+```text
+PARTIALLY_VERIFIABLE
+```
+
+Dies ist insbesondere für unbestimmte Rechtsbegriffe wichtig, z. B.:
+
+* angemessen,
+* erforderlich,
+* verhältnismäßig,
+* Stand der Technik.
+
+---
+
+# 10. Softwareänderungen ohne Spec-Änderung
+
+Das System soll ausdrücklich erlauben, Implementierungsdetails zu ändern, ohne die Produktspezifikation anzupassen.
+
+Beispiel:
+
+```text
+Agent, mache den Button grün.
+```
+
+Das soll lediglich eine Codeänderung auslösen.
+
+Danach soll erneut validiert werden, dass alle relevanten Anforderungen weiterhin erfüllt sind.
+
+Das System soll zwischen ungefähr folgenden Arten von Änderungen unterscheiden können:
+
+```text
+Non-semantic implementation change
+
+versus
+
+Semantic system change
+```
+
+Beispiele für non-semantic:
+
+* Farbe,
+* Layout,
+* internes Refactoring,
+* Umbenennung interner Variablen.
+
+Beispiele für semantic:
+
+* Endpoint wird öffentlich,
+* neues personenbezogenes Datenfeld,
+* Berechtigung wird geändert,
+* API-Verhalten wird verändert.
+
+Es muss nicht sofort perfekte automatische Change Classification geben.
+
+Entwirf aber die Architektur so, dass Impact Analysis später möglich ist.
+
+---
+
+# 11. Incremental Validation / Impact Analysis
+
+Langfristig soll der Knowledge Graph erkennen können, welche Regeln und Tests durch eine Änderung betroffen sind.
+
+Beispiel:
+
+```text
+Button CSS changed
+→ UI tests
+→ accessibility checks
+
+API authorization changed
+→ product requirements
+→ security requirements
+→ privacy requirements
+→ authorization tests
+```
+
+Der MVP darf zunächst alles neu validieren.
+
+Die Architektur soll aber spätere inkrementelle Auswertung ermöglichen.
+
+---
+
+# 12. Kalender-App als MVP
+
+Die erste Anwendung soll bewusst klein bleiben.
+
+## MVP Features
+
+```text
+User
+Event
+
+Create Event
+Read Event
+Update Event
+Delete Event
+```
+
+Event mindestens:
+
+```text
+id
+owner
+title
+description
+start
+end
+```
+
+Optional später:
+
+```text
+participants
+location
+sharing
+recurring events
+reminders
+```
+
+Version 1 sollte noch keine unnötige Kalenderkomplexität enthalten.
+
+---
+
+# 13. Technische Zielanwendung
+
+Für die Kalenderanwendung darfst du eine pragmatische moderne Architektur wählen.
+
+Bevorzuge, falls keine guten Gründe dagegensprechen:
+
+Backend:
+
+```text
+Python
+FastAPI
+Pydantic
+pytest
+```
+
+Frontend:
+
+```text
+React
+TypeScript
+```
+
+Persistenz für MVP:
+
+```text
+SQLite oder PostgreSQL
+```
+
+Wähle die einfachere Lösung, solange die Architektur später austauschbar bleibt.
+
+Containerisierung:
+
+```text
+Docker
+```
+
+Die gesamte Anwendung soll lokal ausführbar sein.
+
+---
+
+# 14. Generator
+
+Für den ersten MVP muss der Compiler nicht beliebige Anwendungen generieren können.
+
+Es reicht, wenn er beweist, dass das Konzept funktioniert.
+
+Er soll mindestens:
+
+1. eine Product Spec einlesen,
+2. Ontologie-/Semantikwissen anwenden,
+3. Regeln auswerten,
+4. Derived Requirements erzeugen,
+5. eine Resolved System Specification erzeugen,
+6. daraus die Kalenderanwendung oder wesentliche Teile generieren,
+7. Tests generieren oder auswählen,
+8. Tests ausführen,
+9. Evidence erzeugen,
+10. einen nachvollziehbaren Compliance-/Requirement-Report erstellen.
+
+---
+
+# 15. Codegenerierung
+
+Vermeide möglichst unkontrollierte LLM-Generierung als Kernmechanismus.
+
+Bevorzuge für deterministische Teile:
+
+* Templates,
+* AST-basierte Generatoren,
+* deklarative Generatoren,
+* bekannte Architekturbausteine.
+
+Ein LLM kann ergänzend verwendet werden.
+
+Erkläre mir, welche Artefakte besser deterministisch generiert werden und wo ein Coding-Agent sinnvoll ist.
+
+---
+
+# 16. Validierung
+
+Der Compiler soll zwischen zwei Dingen unterscheiden:
+
+```text
+Requirement Resolution
+
+und
+
+Implementation Verification
+```
+
+Requirement Resolution beantwortet:
+
+```text
+Welche Anforderungen gelten?
+```
+
+Implementation Verification beantwortet:
+
+```text
+Sind diese Anforderungen durch die aktuelle Implementierung nachweislich erfüllt?
+```
+
+Beispiel:
+
+```text
+SEC-001:
+Authentication required
+
+Implementation:
+JWT middleware
+
+Verification:
+integration test rejects anonymous request
+
+Result:
+VERIFIED
+```
+
+---
+
+# 17. Tests als Evidenz
+
+Tests sollen selbst Teil des Modells sein.
+
+Beispiel:
+
+```text
+Requirement SEC-001
+verifiedBy TEST-SEC-001-01
+```
+
+Der Testlauf erzeugt eine konkrete Evidence:
+
+```text
+Evidence:
+TEST-SEC-001-01
+commit: abc123
+timestamp: ...
+result: PASS
+```
+
+Berücksichtige, dass Tests keine vollständigen mathematischen Beweise darstellen.
+
+Das System soll transparent machen, welche Art von Evidenz vorliegt.
+
+---
+
+# 18. Versionierung
+
+Alle folgenden Artefakte sollen versionierbar sein:
+
+* Product Spec
+* Ontology
+* Rules
+* Requirements
+* Implementation Patterns
+* Application Code
+* Tests
+* Evidence
+
+Ein Compliance-Report muss sich auf konkrete Versionen bzw. Git-Commits beziehen können.
+
+---
+
+# 19. Provenance
+
+Jede relevante Aussage soll Herkunftsinformationen besitzen können.
+
+Beispiel:
+
+```yaml
+requirement:
+  id: SEC-001
+
+source:
+  type: internal_policy
+  document: security-policy
+  version: 1.2
+  section: authenticated-access
+```
+
+Später sollen auch Quellen möglich sein wie:
+
+```text
+DSGVO
+BNetzA-Festlegung
+MaKo-Dokument
+ISO-Norm
+BSI-Vorgabe
+```
+
+---
+
+# 20. Repository-Struktur
+
+Entwirf eine sinnvolle Struktur.
+
+Eine mögliche Ausgangsidee ist:
+
+```text
+compiler/
+
+knowledge/
+  ontology/
+  rules/
+  patterns/
+
+policies/
+  security/
+  privacy/
+  architecture/
+
+products/
+  calendar/
+    product.yaml
+
+generated/
+  calendar/
+
+evidence/
+
+tests/
+```
+
+Du musst diese Struktur nicht übernehmen.
+
+Schlage eine bessere vor, falls sinnvoll.
+
+---
+
+# 21. Anforderungen an den Compiler selbst
+
+Der Compiler sollte:
+
+* modular,
+* gut getestet,
+* nachvollziehbar,
+* deterministisch, soweit möglich,
+* erweiterbar,
+* unabhängig von einem konkreten Produkt,
+* unabhängig von einer bestimmten Cloud,
+* ohne unnötige Framework-Komplexität
+
+sein.
+
+Bevorzuge verständlichen Code gegenüber einer übermäßig generischen Architektur.
+
+---
+
+# 22. CLI
+
+Der MVP soll eine CLI besitzen.
+
+Konzeptionell beispielsweise:
+
+```bash
+compiler resolve products/calendar
+
+compiler explain SEC-001
+
+compiler generate products/calendar
+
+compiler validate products/calendar
+
+compiler evidence products/calendar
+
+compiler report products/calendar
+```
+
+Ein besonders wichtiges Feature ist:
+
+```bash
+compiler explain <requirement>
+```
+
+Es soll die vollständige Ableitung anzeigen:
+
+```text
+SEC-001 applies
+
+because:
+
+GET /events/{id}
+returns Event
+
+Event contains owner
+
+owner is User
+
+User is PersonalData
+
+rule security/authenticated-personal-data triggered
+
+therefore:
+
+Authentication required
+```
+
+---
+
+# 23. Erwarteter MVP-Demo-Flow
+
+Ich möchte am Ende ungefähr folgende Demonstration durchführen können.
+
+### Schritt 1
+
+Product Spec:
+
+```text
+Calendar with Event CRUD
+```
+
+### Schritt 2
+
+Compiler:
+
+```text
+Declared Requirements: 4
+Derived Requirements: 12
+```
+
+### Schritt 3
+
+Er generiert oder vervollständigt die Anwendung.
+
+### Schritt 4
+
+Validierung:
+
+```text
+SEC-001 VERIFIED
+SEC-002 VERIFIED
+PRIVACY-001 HUMAN_REVIEW_REQUIRED
+PRODUCT-001 VERIFIED
+```
+
+### Schritt 5
+
+Ich ändere absichtlich den Code:
+
+```text
+GET /events/{id}
+```
+
+wird ohne Authentication verfügbar.
+
+### Schritt 6
+
+Compiler:
+
+```text
+FAIL
+
+SEC-001 violated
+
+Expected:
+authenticated access
+
+Observed:
+anonymous request returned HTTP 200
+
+Evidence:
+test_security_personal_data_requires_authentication
+```
+
+### Schritt 7
+
+Ich sage einem Coding-Agent:
+
+```text
+Mache den Create-Event-Button grün.
+```
+
+Der Agent ändert nur die Implementierung.
+
+Danach:
+
+```bash
+compiler validate
+```
+
+Die Anforderungen bleiben erfüllt.
+
+---
+
+# 24. Noch wichtiger als Technologie: Architekturdenken
+
+Ich möchte nicht, dass du einfach RDF, Neo4j, Drools oder irgendein anderes Tool auswählst, weil es zum Thema passt.
+
+Bewerte zunächst:
+
+* Was brauchen wir tatsächlich?
+* Was ist für den MVP die einfachste belastbare Lösung?
+* Wo benötigen wir echte semantische Inferenz?
+* Wo reichen normale typisierte Datenstrukturen?
+* Wo brauchen wir eine Regel-Engine?
+* Brauchen wir für Version 1 überhaupt eine Graphdatenbank?
+* Könnte der Graph zunächst aus normalen Strukturen berechnet werden?
+* Wo wäre OWL hilfreich?
+* Wo wäre OWL unnötiger Ballast?
+* Wo wäre Datalog besonders passend?
+* Sollte eine kleine eigene DSL verwendet werden?
+* Wie verhindern wir, dass wir ein schwer wartbares Expertensystem bauen?
+
+Ich möchte ausdrücklich, dass du auch argumentierst, wenn eine einfachere Lösung besser ist als eine Ontologie.
+
+---
+
+# 25. Deine erste Antwort
+
+Implementiere noch NICHTS.
+
+Deine erste Antwort soll aus folgenden Teilen bestehen:
+
+## A. Verständnis des Problems
+
+Erkläre in deinen eigenen Worten, was wir bauen.
+
+## B. Architekturvorschlag
+
+Zeige die wichtigsten Komponenten und deren Verantwortlichkeiten.
+
+Nutze gerne Mermaid oder ASCII.
+
+## C. Rolle der Ontologie
+
+Erkläre exakt:
+
+* was die Ontologie modelliert,
+* was sie nicht modellieren sollte,
+* welche Ontologie-Technologie du für den MVP verwenden würdest oder warum du zunächst darauf verzichten würdest.
+
+## D. Rule Engine / Expertensystem
+
+Erkläre:
+
+* wie Regeln aussehen,
+* wie Facts entstehen,
+* wie Requirements daraus abgeleitet werden,
+* wie Konflikte behandelt werden.
+
+## E. Datenmodell
+
+Zeige einen konkreten ersten Entwurf für:
+
+* Product Spec
+* Fact
+* Concept
+* Rule
+* Requirement
+* Implementation Pattern
+* Evidence
+
+## F. Kalender-Beispiel
+
+Führe mindestens eine vollständige Ableitung durch:
+
+```text
+Product Requirement
+→ Facts
+→ Ontology
+→ Rule
+→ Derived Requirement
+→ Implementation
+→ Test
+→ Evidence
+```
+
+## G. Technologieentscheidung
+
+Schlage einen konkreten Stack für den MVP vor und begründe jeden wesentlichen Baustein.
+
+## H. Repository-Struktur
+
+Zeige die geplante Struktur.
+
+## I. Implementierungsplan
+
+Teile die Entwicklung in kleine, überprüfbare Phasen.
+
+Jede Phase soll ein sichtbares Ergebnis produzieren.
+
+Bevorzuge ungefähr 5–8 Phasen.
+
+## J. Risiken
+
+Nenne insbesondere Risiken bezüglich:
+
+* Ontologie-Komplexität,
+* Regel-Explosion,
+* falscher Compliance-Sicherheit,
+* LLM-Nichtdeterminismus,
+* Test-Evidenz versus tatsächlichem Beweis,
+* Wartbarkeit,
+* Versionsmanagement,
+* Konflikten zwischen Regeln verschiedener Teams.
+
+## K. MVP-Abgrenzung
+
+Sage explizit, was wir in Version 1 NICHT bauen sollten.
+
+## L. Entscheidungspunkte
+
+Nenne nur die wirklich relevanten Architekturentscheidungen, bei denen meine Präferenz einen wesentlichen Unterschied macht.
+
+Wenn du eine vernünftige Default-Entscheidung treffen kannst, tue das und erkläre sie, anstatt unnötig nachzufragen.
+
+---
+
+# 26. Arbeitsweise nach meiner Freigabe
+
+Nach meiner Freigabe sollst du iterativ implementieren.
+
+Für jede Phase:
+
+1. kurz Ziel erklären,
+2. implementieren,
+3. Tests schreiben,
+4. Tests ausführen,
+5. Ergebnis zeigen,
+6. Architekturentscheidungen dokumentieren,
+7. erst dann mit der nächsten Phase fortfahren.
+
+Der Code muss jederzeit nachvollziehbar und möglichst lauffähig bleiben.
+
+Vermeide große einmalige Code-Dumps.
+
+---
+
+# 27. Leitprinzipien
+
+Behalte während des gesamten Projekts diese Prinzipien bei:
+
+```text
+Requirements are first-class objects.
+
+Rules are owned independently from products.
+
+Compliance requirements are injected, not copied.
+
+Derived requirements must be explainable.
+
+LLMs propose; deterministic systems decide.
+
+The specification defines invariants, not every implementation detail.
+
+Implementation may vary as long as invariants remain satisfied.
+
+No compliance claim without evidence.
+
+Every evidence must be traceable to a requirement and a concrete software version.
+
+Human judgment must remain explicit where deterministic verification is impossible.
+```
+
+Das Ziel des MVP ist nicht, bereits ein universelles Legal-Tech-System zu bauen.
+
+Das Ziel ist, anhand einer Kalenderanwendung überzeugend zu demonstrieren, dass eine kleine Produktspezifikation mit zentral gepflegtem semantischem Wissen und Regeln zu einer nachvollziehbaren, ausführbaren und überprüfbaren Systemspezifikation aufgelöst werden kann.

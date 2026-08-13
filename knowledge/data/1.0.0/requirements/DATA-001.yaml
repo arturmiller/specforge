@@ -1,0 +1,8 @@
+id: DATA-001
+version: "1.0.0"
+statement: Event end must be later than event start.
+expectation: {control: event_time_interval, operator: equals, value: end_after_start}
+verifications:
+  - {id: TEST-DATA-001, adapter: domain_invariant, setup: invalid_interval, assertion: {response_status: 422, invariant: "end > start"}}
+source: {type: architecture_policy, document: calendar-invariants, version: "1.0.0", section: event-time}
+

@@ -1,0 +1,9 @@
+id: security/authenticated-personal-data
+version: "1.0.0"
+when:
+  all:
+    - {fact: {subject: "$operation", predicate: returns, object: "$resource"}}
+    - {fact: {subject: "$resource", predicate: contains_classification, object: PersonalData}}
+then: {requirement: SEC-001, target: "$operation"}
+source: {type: internal_policy, document: security-policy, version: "1.0.0", section: authenticated-personal-data}
+

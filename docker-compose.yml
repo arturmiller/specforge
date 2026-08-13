@@ -1,0 +1,17 @@
+services:
+  calendar-api:
+    build:
+      context: .
+      dockerfile: generated/calendar/app/backend/Dockerfile
+    environment:
+      CALENDAR_DATABASE_URL: sqlite:////data/calendar.db
+    ports: ["8000:8000"]
+    volumes: ["calendar-data:/data"]
+  calendar-web:
+    build:
+      context: .
+      dockerfile: generated/calendar/app/frontend/Dockerfile
+    ports: ["5173:5173"]
+    depends_on: [calendar-api]
+volumes:
+  calendar-data:

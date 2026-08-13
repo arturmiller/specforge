@@ -1,0 +1,9 @@
+.git
+.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/dist
+.pytest_cache
+evidence
+calendar.db

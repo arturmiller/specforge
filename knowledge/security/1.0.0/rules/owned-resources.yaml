@@ -1,0 +1,12 @@
+id: security/owned-resources
+version: "1.0.0"
+when:
+  all:
+    - {fact: {subject: "$operation", predicate: scope, object: own}}
+    - {fact: {subject: "$operation", predicate: returns, object: "$resource"}}
+    - {fact: {subject: "$resource", predicate: has_field, object: "$owner_field"}}
+    - {fact: {subject: "$owner_field", predicate: relation, object: ownership}}
+    - not:
+        fact: {subject: "$operation", predicate: action, object: create}
+then: {requirement: SEC-002, target: "$operation"}
+source: {type: internal_policy, document: security-policy, version: "1.0.0", section: ownership}

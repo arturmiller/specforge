@@ -1,0 +1,8 @@
+id: SEC-001
+version: "1.0.0"
+statement: Resources containing PersonalData require authenticated access.
+expectation: {control: authentication, operator: equals, value: required}
+verifications:
+  - {id: TEST-SEC-001, adapter: http_request, setup: anonymous_all_crud, assertion: {response_status: 401}}
+source: {type: internal_policy, document: security-policy, version: "1.0.0", section: authenticated-personal-data}
+

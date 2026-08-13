@@ -1,0 +1,8 @@
+id: SEC-002
+version: "1.0.0"
+statement: Users may access only resources they own.
+expectation: {control: authorization, operator: equals, value: ownership}
+verifications:
+  - {id: TEST-SEC-002, adapter: http_request, setup: foreign_user_all_crud, assertion: {response_status: 404}}
+source: {type: internal_policy, document: security-policy, version: "1.0.0", section: ownership}
+
