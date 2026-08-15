@@ -245,5 +245,16 @@ def report(product: str) -> None:
         fail(exc)
 
 
+@app.command()
+def visualize(product: str) -> None:
+    """Create a self-contained interactive specification graph."""
+    try:
+        from .visualization import create_visualization
+
+        typer.echo(str(create_visualization(root(), product)))
+    except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
 if __name__ == "__main__":
     app()

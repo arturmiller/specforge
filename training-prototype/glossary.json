@@ -1,0 +1,4 @@
+{
+  "Rule": "Eine maschinenlesbare Wenn-dann-Regel, die anhand von Produktfakten entscheidet, ob ein Requirement für ein bestimmtes Target gilt.",
+  "Operation": "Eine ausführbare Aktion des Produkts, beispielsweise create_event oder read_event. Sie kann das Target eines Requirements sein."
+}

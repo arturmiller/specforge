@@ -19,6 +19,14 @@ knowledge/privacy/1.0.0/
 └── patterns/*.yaml
 ```
 
+Knowledge-Pakete haben eine explizite Rolle: `policy` beschreibt
+app-unabhängige Erwartungen, `domain` die Fachdomäne, `implementation` einen
+technischen Stack und `integration` die Verbindung aus genau einer Domäne und
+einer Implementierung. Policy-Pakete wie `privacy` und `security` enthalten
+keine stack-spezifischen Patterns. Wiederverwendbare Patterns liegen im
+Implementierungspaket; domänen- und stack-spezifische Patterns liegen im
+Integrationspaket. Ein Produkt pinnt alle benötigten Pakete unabhängig.
+
 Nur `package.yaml` ist zwingend vorhanden. Die vier Unterordner sind optional.
 Das Manifest bezeichnet das Paket:
 
@@ -26,7 +34,26 @@ Das Manifest bezeichnet das Paket:
 name: privacy
 version: "1.0.0"
 owner: privacy-team
+kind: policy
+purpose: Defines app-independent privacy knowledge.
 ```
+
+Ein Integrationspaket benennt seine beiden Seiten ausdrücklich:
+
+```yaml
+name: calendar-fastapi-react
+version: "1.0.0"
+kind: integration
+purpose: Connects Calendar requirements to FastAPI and React patterns.
+integrates:
+  domain: {package: calendar, version: "1.1.0"}
+  implementation: {package: fastapi-react, version: "1.0.0"}
+```
+
+Beide referenzierten Versionen müssen als aktive `knowledge_dependencies` des
+Produkts gepinnt sein. Der Compiler lehnt fehlende oder abweichende
+Integrationsseiten mit `SF1006` ab. Der Spec Explorer zeigt diese Rollen in
+einer eigenen Ansicht **Pakete** und zeichnet die Beziehungen explizit.
 
 Ein Produkt pinnt Pakete über `knowledge_dependencies` auf eine exakte Version:
 
@@ -42,7 +69,8 @@ berechnet zusätzlich einen SHA-256-Hash über relative Dateinamen und den
 unveränderten Inhalt aller Dateien des Paketverzeichnisses. Version und Hash
 werden in der aufgelösten Spec und später in der Evidence festgehalten. Damit
 ändert auch eine inhaltliche Änderung ohne Versionswechsel den Hash der
-aufgelösten Spec. `owner` ist derzeit Metadatum und wird nicht ausgewertet.
+aufgelösten Spec. `owner` und `purpose` sind beschreibende Metadaten; `kind`
+und `integrates` werden validiert.
 
 ## Die vier Knowledge-Bausteine
 
@@ -92,7 +120,7 @@ verifications:
     adapter: response_schema
     setup: owner_read
     assertion:
-      response_fields: [description, end, id, location, owner_id, start, title]
+      response_fields_from: resolved_resource_schema
 source:
   type: internal_policy
   document: privacy-policy
@@ -107,6 +135,13 @@ mindestens eine davon muss verpflichtend sein (`mandatory` ist standardmäßig
 `domain_invariant`, `audit_log` und `rate_limit`. Eine Assertion muss mindestens
 ein ausführbares, vom Datenmodell unterstütztes Feld enthalten. Unbekannte
 Felder werden in allen Knowledge-Modellen abgewiesen.
+`response_fields_from: resolved_resource_schema` ist eine symbolische,
+app-unabhängige Erwartung. Der Verifier folgt vom Target zur `returns`-Entität
+und leitet die erlaubten Feldnamen aus der aufgelösten Product Spec ab. Ein
+optionales `response_name` am Feld beschreibt ein explizites API-Alias wie
+`owner` → `owner_id`. Beobachtete Response-Felder dürfen eine Teilmenge der
+deklarierten Felder sein, aber keine zusätzlichen Felder enthalten; alle nicht
+optionalen Felder müssen vorhanden sein.
 
 Die `statement`-Texte in `product.yaml` sind lesbare Produktdeklarationen. Für
 die aufgelöste Instanz gelten jedoch Statement, Version, Erwartung, Quelle und
@@ -121,7 +156,7 @@ id: security/authenticated-personal-data
 version: "1.0.0"
 when:
   all:
-    - fact: {subject: "$operation", predicate: returns, object: "$resource"}
+    - fact: {subject: "$operation", predicate: acts_on, object: "$resource"}
     - fact: {subject: "$resource", predicate: contains_classification, object: PersonalData}
 then:
   requirement: SEC-001
@@ -146,7 +181,8 @@ Paar aus Requirement und Target zu, werden sie in einer Instanz konsolidiert.
 
 ### Patterns: wie eine Erwartung umgesetzt werden kann
 
-Patterns verbinden eine Requirement-Instanz mit einer kompatiblen Umsetzung:
+Patterns verbinden eine Requirement-Instanz mit einer kompatiblen Umsetzung.
+Sie liegen in einem Implementierungspaket, nicht im Policy-Paket:
 
 ```yaml
 id: fastapi/declared-response-schema
@@ -158,9 +194,11 @@ verifications: [TEST-PRIVACY-001]
 artifacts: [backend/app.py]
 ```
 
-Der Compiler wählt das erste nach ID und Version sortierte Pattern, das den
-Control-Wert der Instanz adressiert und alle Verification-IDs der Definition
-aufführt. Neben der gezeigten Form unterstützt das Modell eine explizite
+Der Compiler berücksichtigt nur Patterns für den in der Product Identity
+deklarierten Stack. Genau ein Pattern muss den Control-Wert der Instanz
+adressieren und alle Verification-IDs der Definition aufführen. Kein Treffer
+ergibt `SF1501`, mehrere Treffer ergeben `SF1502`. Neben der gezeigten Form
+unterstützt das Modell eine explizite
 `addresses`-Beschreibung sowie Metadaten wie Kompatibilitäten, Abhängigkeiten,
 Constraints, Empfehlungen, Beispiele und Skills. Enthält ein Artifact- oder
 Beispielpfad das Wort `template`, wird das Pattern abgewiesen. Gibt es für eine
@@ -173,13 +211,16 @@ Instanz kein kompatibles Pattern, bricht das Auflösen mit `SF1501` ab.
 1. Die Product Spec wird strikt validiert und alle gepinnten Pakete werden in
    sortierter Reihenfolge geladen und gehasht.
 2. Product-Entitäten, Felder und Operationen werden in atomare Fakten wie
-   `has_field`, `has_type`, `classified_as`, `returns` und `scope` normalisiert.
+   `has_field`, `has_type`, `classified_as`, `acts_on`, `returns` und `scope`
+   normalisiert. `acts_on` bezeichnet die bearbeitete Ressource; `returns` wird
+   nur für eine tatsächliche Response-Entität erzeugt.
 3. Concepts ergänzen diese Fakten durch die semantische Hülle.
 4. Explizit in `declared_requirements` genannte Requirements werden direkt für
    die dort genannte Operation instanziiert.
 5. Rules werden gegen alle Fakten ausgewertet und erzeugen weitere, begründete
    Requirement-Instanzen.
-6. Für jede Instanz wird ein kompatibles Pattern ausgewählt.
+6. Für jede Instanz wird genau ein zum Product-Stack kompatibles Pattern aus
+   dem Implementierungspaket ausgewählt.
 7. Expectations werden pro Target und Control konsolidiert. Fordern zwei
    Instanzen unterschiedliche Werte für dasselbe Control desselben Targets,
    stoppt der Compiler mit `SF1301` und nennt Requirements, Regeln und
@@ -211,4 +252,3 @@ Paketvalidierung: Es erkennt unter anderem Schemafehler, fehlende Referenzen,
 Concept-Zyklen, doppelte IDs, nicht ausführbare Requirements, fehlende Patterns
 und widersprüchliche Controls. Danach sollten mindestens `resolve` und die
 Tests ausgeführt werden; bei geänderter Verifikation zusätzlich `validate`.
-

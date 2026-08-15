@@ -20,6 +20,7 @@ class Provenance(StrictModel):
 class ProductIdentity(StrictModel):
     id: str
     version: str
+    stack: str
 
 
 class EntityField(StrictModel):
@@ -28,6 +29,7 @@ class EntityField(StrictModel):
     relation: str | None = None
     classification: str | None = None
     optional: bool = False
+    response_name: str | None = None
 
 
 class Entity(StrictModel):
@@ -38,7 +40,8 @@ class Entity(StrictModel):
 class Operation(StrictModel):
     id: str
     action: Literal["create", "read", "update", "delete"]
-    resource: str
+    acts_on: str
+    returns: str | None = None
     actor: str
     scope: str
 
@@ -50,7 +53,7 @@ class DeclaredRequirement(StrictModel):
 
 
 class ProductSpec(StrictModel):
-    schema_version: Literal["1"]
+    schema_version: Literal["2"]
     product: ProductIdentity
     entities: list[Entity]
     operations: list[Operation]
@@ -68,11 +71,40 @@ class ProductSpec(StrictModel):
             if len(names) != len(set(names)):
                 raise ValueError(f"SF1002 duplicate field id in {entity.id}")
         for operation in self.operations:
-            if operation.resource not in entities or operation.actor not in entities:
+            if operation.acts_on not in entities or operation.actor not in entities:
                 raise ValueError(f"SF1003 unresolved operation reference: {operation.id}")
+            if operation.returns is not None and operation.returns not in entities:
+                raise ValueError(f"SF1003 unresolved operation response reference: {operation.id}")
         for requirement in self.declared_requirements:
             if requirement.operation not in operations:
                 raise ValueError(f"SF1003 unresolved operation: {requirement.operation}")
+        return self
+
+
+class PackageReference(StrictModel):
+    package: str
+    version: str
+
+
+class PackageIntegration(StrictModel):
+    domain: PackageReference
+    implementation: PackageReference
+
+
+class PackageManifest(StrictModel):
+    name: str
+    version: str
+    owner: str | None = None
+    kind: Literal["policy", "domain", "implementation", "integration"] | None = None
+    purpose: str | None = None
+    integrates: PackageIntegration | None = None
+
+    @model_validator(mode="after")
+    def integration_shape(self) -> "PackageManifest":
+        if self.kind == "integration" and self.integrates is None:
+            raise ValueError("SF1006 integration package must declare integrates")
+        if self.kind != "integration" and self.integrates is not None:
+            raise ValueError("SF1006 only integration packages may declare integrates")
         return self
 
 
@@ -93,6 +125,7 @@ class Expectation(StrictModel):
 class AssertionSpec(StrictModel):
     response_status: int | None = None
     response_fields: list[str] | None = None
+    response_fields_from: Literal["resolved_resource_schema"] | None = None
     invariant: str | None = None
     stored_matches: bool | None = None
     resource_matches: bool | None = None

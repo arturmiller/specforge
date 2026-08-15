@@ -1,22 +1,22 @@
-schema_version: "1"
-product: {id: calendar, version: "1.0.0"}
+schema_version: "2"
+product: {id: calendar, version: "1.0.0", stack: fastapi-react}
 entities:
   - id: User
     fields: [{name: id, type: UUID}]
   - id: Event
     fields:
       - {name: id, type: UUID}
-      - {name: owner, type: User, relation: ownership, classification: PersonalData}
+      - {name: owner, type: User, relation: ownership, classification: PersonalData, response_name: owner_id}
       - {name: title, type: Text}
       - {name: description, type: Text, classification: PersonalData}
       - {name: location, type: Text, classification: PersonalData, optional: true}
       - {name: start, type: DateTime}
       - {name: end, type: DateTime}
 operations:
-  - {id: create_event, action: create, resource: Event, actor: User, scope: own}
-  - {id: read_event, action: read, resource: Event, actor: User, scope: own}
-  - {id: update_event, action: update, resource: Event, actor: User, scope: own}
-  - {id: delete_event, action: delete, resource: Event, actor: User, scope: own}
+  - {id: create_event, action: create, acts_on: Event, returns: Event, actor: User, scope: own}
+  - {id: read_event, action: read, acts_on: Event, returns: Event, actor: User, scope: own}
+  - {id: update_event, action: update, acts_on: Event, returns: Event, actor: User, scope: own}
+  - {id: delete_event, action: delete, acts_on: Event, actor: User, scope: own}
 declared_requirements:
   - {id: PRODUCT-001, operation: create_event, statement: "A user can create an event."}
   - {id: PRODUCT-002, operation: read_event, statement: "A user can read an owned event."}
@@ -24,4 +24,4 @@ declared_requirements:
   - {id: PRODUCT-004, operation: delete_event, statement: "A user can delete an owned event."}
   - {id: OBS-001, operation: read_event, statement: "Event access is audited."}
   - {id: PLATFORM-001, operation: read_event, statement: "Event reads are rate limited."}
-knowledge_dependencies: {calendar: "1.0.0", data: "1.0.0", observability: "1.0.0", platform: "1.0.0", privacy: "1.0.0", security: "1.0.0"}
+knowledge_dependencies: {calendar: "1.1.0", calendar-fastapi-react: "1.0.0", fastapi-react: "1.0.0", observability: "1.1.0", platform: "1.1.0", privacy: "1.1.0", security: "1.1.0"}

@@ -1,3 +1,5 @@
+codex resume 019ffc67-5901-7e51-9c17-e074e680af26
+
 # SpecForge
 
 SpecForge V2 is a deterministic requirements compiler with an agentic implementation backend, demonstrated with a small Calendar application. It resolves and consolidates independently versioned requirements, creates a bounded work order for Codex, verifies the result deterministically, and records traceable evidence.
@@ -17,7 +19,13 @@ uv run specforge implement products/calendar --agent codex --dry-run
 uv run specforge validate products/calendar
 uv run specforge evidence products/calendar
 uv run specforge report products/calendar
+uv run specforge visualize products/calendar
 ```
+
+`visualize` writes a self-contained interactive Spec Explorer to
+`generated/<product>/visualization/index.html`. Open that file in a browser to
+explore the product model, knowledge packages, derivation trace, implementation
+patterns, and verifications without reading the generated JSON directly.
 
 Start the agent-managed application:
 

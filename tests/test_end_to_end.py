@@ -13,6 +13,7 @@ from specforge.compiler import Compiler
 from specforge.generation import generate_product
 from specforge.reporting import create_report
 from specforge.verification import validate_product
+from specforge.verification import expected_assertion, response_schema_matches
 
 
 ROOT = Path(__file__).parents[1]
@@ -43,6 +44,27 @@ def test_generation_and_validation_produce_complete_evidence(tmp_path: Path):
     assert all(entry["git_commit"] and entry["resolved_spec_hash"] == resolved.content_hash for entry in evidence["entries"])
     assert all("@operation:" in entry["verification_id"] for entry in evidence["entries"])
     assert all(entry["verification_definition"].startswith("TEST-") for entry in evidence["entries"])
+
+
+def test_privacy_verification_derives_fields_from_resolved_response_schema():
+    resolved = Compiler(ROOT).resolve("products/calendar", write=False)
+    instance = next(
+        item
+        for item in resolved.requirements
+        if item.id == "PRIVACY-001@operation.read_event"
+    )
+
+    assert instance.verifications[0].assertion.response_fields is None
+    assert instance.verifications[0].assertion.response_fields_from == "resolved_resource_schema"
+    expected = expected_assertion(resolved, instance.target, instance.verifications[0])
+    assert expected == {
+        "response_fields": ["description", "end", "id", "location", "owner_id", "start", "title"],
+        "required_response_fields": ["description", "end", "id", "owner_id", "start", "title"],
+    }
+    assert response_schema_matches(expected, {"response_fields": expected["response_fields"]})
+    assert response_schema_matches(expected, {"response_fields": expected["required_response_fields"]})
+    assert not response_schema_matches(expected, {"response_fields": [*expected["response_fields"], "secret"]})
+    assert not response_schema_matches(expected, {"response_fields": []})
 
 
 def test_generation_is_byte_deterministic(tmp_path: Path):
@@ -141,7 +163,7 @@ def test_report_rejects_evidence_from_an_old_resolved_spec(tmp_path: Path):
     generate_product(root, resolved)
     validate_product(root, "products/calendar")
     product = root / "products/calendar/product.yaml"
-    product.write_text(product.read_text(encoding="utf-8").replace('version: "1.0.0"}', 'version: "1.0.1"}'), encoding="utf-8")
+    product.write_text(product.read_text(encoding="utf-8").replace('version: "1.0.0"', 'version: "1.0.1"', 1), encoding="utf-8")
     import pytest
     with pytest.raises(RuntimeError, match="stale evidence"):
         create_report(root, "products/calendar")
@@ -151,7 +173,7 @@ def test_knowledge_content_change_changes_resolved_hash(tmp_path: Path):
     root = copy_project(tmp_path)
     compiler = Compiler(root)
     before = compiler.resolve("products/calendar").content_hash
-    requirement = root / "knowledge/security/1.0.0/requirements/SEC-001.yaml"
+    requirement = root / "knowledge/security/1.1.0/requirements/SEC-001.yaml"
     requirement.write_text(requirement.read_text(encoding="utf-8").replace("authenticated access", "verified authenticated access"), encoding="utf-8")
     after = compiler.resolve("products/calendar").content_hash
     assert after != before

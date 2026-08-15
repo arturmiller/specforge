@@ -17,7 +17,7 @@ def test_conflicting_controls_are_reported_with_both_sources(monkeypatch, tmp_pa
     root = Path(__file__).parents[1]
     for name in ["knowledge", "products"]:
         shutil.copytree(root / name, tmp_path / name)
-    requirement = tmp_path / "knowledge/security/1.0.0/requirements/SEC-003.yaml"
+    requirement = tmp_path / "knowledge/security/1.1.0/requirements/SEC-003.yaml"
     requirement.write_text(
         "id: SEC-003\nversion: '1.0.0'\nstatement: Authentication is forbidden.\n"
         "expectation: {control: authentication, operator: equals, value: forbidden}\n"
@@ -25,14 +25,14 @@ def test_conflicting_controls_are_reported_with_both_sources(monkeypatch, tmp_pa
         "source: {type: internal_policy, document: conflicting-policy, version: '1.0.0', section: public}\n",
         encoding="utf-8",
     )
-    rule = tmp_path / "knowledge/security/1.0.0/rules/conflict.yaml"
+    rule = tmp_path / "knowledge/security/1.1.0/rules/conflict.yaml"
     rule.write_text(
         "id: security/conflict\nversion: '1.0.0'\nwhen: {fact: {subject: '$operation', predicate: returns, object: Event}}\n"
         "then: {requirement: SEC-003, target: '$operation'}\n"
         "source: {type: internal_policy, document: conflicting-policy, version: '1.0.0', section: public}\n",
         encoding="utf-8",
     )
-    pattern = tmp_path / "knowledge/security/1.0.0/patterns/conflict.yaml"
+    pattern = tmp_path / "knowledge/fastapi-react/1.0.0/patterns/conflict.yaml"
     pattern.write_text(
         "id: fastapi/public\nversion: '1.0.0'\nsatisfies: [SEC-003]\nstack: fastapi-react\n"
         "controls: {authentication: forbidden}\nverifications: [TEST-SEC-003]\nartifacts: [backend/app.py]\n",
@@ -43,6 +43,6 @@ def test_conflicting_controls_are_reported_with_both_sources(monkeypatch, tmp_pa
     message = str(caught.value)
     assert caught.value.code == "SF1301"
     assert "SEC-001" in message and "SEC-003" in message
-    assert "security/authenticated-personal-data@1.0.0" in message
+    assert "security/authenticated-personal-data@1.1.0" in message
     assert "security/conflict@1.0.0" in message
-    assert "security@1.0.0" in message
+    assert "security@1.1.0" in message

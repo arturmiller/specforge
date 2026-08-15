@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from .errors import SpecForgeError
 from .io import canonical_json, content_hash, directory_hash, pretty_json, read_yaml, write_if_changed
 from .model import (
-    Concept, Condition, Derivation, Fact, FactOrigin, KnowledgeVersions, Pattern,
+    Concept, Condition, Derivation, Fact, FactOrigin, KnowledgeVersions, PackageManifest, Pattern,
     ProductSpec, RequirementDefinition, RequirementInstance, RequirementStatus,
     ResolvedSpec, Rule,
 )
@@ -36,6 +36,7 @@ class Compiler:
     def load_inputs(self, product: str | Path):
         product_path = self.product_file(product)
         spec = self.load_model(product_path, ProductSpec)
+        self._load_package_manifests(spec, product_path)
         concepts: list[Concept] = []
         requirements: dict[str, RequirementDefinition] = {}
         rules: list[Rule] = []
@@ -45,10 +46,6 @@ class Compiler:
             package = self.root / "knowledge" / namespace / version
             if not package.is_dir():
                 raise SpecForgeError("SF1004", str(product_path.relative_to(self.root)), "/knowledge_dependencies", f"missing {namespace}@{version}")
-            manifest_path = package / "package.yaml"
-            manifest = read_yaml(manifest_path)
-            if manifest.get("name") != namespace or manifest.get("version") != version:
-                raise SpecForgeError("SF1005", str(manifest_path.relative_to(self.root)), "/", "package identity/version mismatch")
             packages[namespace] = {"version": version, "hash": directory_hash(package)}
             for path in sorted(package.glob("concepts/*.yaml")):
                 concepts.append(self.load_model(path, Concept))
@@ -79,6 +76,46 @@ class Compiler:
             if rule.then.requirement not in requirements:
                 raise SpecForgeError("SF1003", rule.id, "/then/requirement", f"missing definition {rule.then.requirement}")
         return spec, concepts, requirements, sorted(rules, key=lambda r: (r.id, r.version)), sorted(patterns, key=lambda p: (p.id, p.version)), packages
+
+    def load_package_manifests(self, product: str | Path) -> dict[str, PackageManifest]:
+        product_path = self.product_file(product)
+        spec = self.load_model(product_path, ProductSpec)
+        return self._load_package_manifests(spec, product_path)
+
+    def _load_package_manifests(
+        self, spec: ProductSpec, product_path: Path
+    ) -> dict[str, PackageManifest]:
+        manifests: dict[str, PackageManifest] = {}
+        for namespace, version in sorted(spec.knowledge_dependencies.items()):
+            package = self.root / "knowledge" / namespace / version
+            if not package.is_dir():
+                raise SpecForgeError(
+                    "SF1004", str(product_path.relative_to(self.root)),
+                    "/knowledge_dependencies", f"missing {namespace}@{version}",
+                )
+            manifest_path = package / "package.yaml"
+            manifest = self.load_model(manifest_path, PackageManifest)
+            if manifest.name != namespace or manifest.version != version:
+                raise SpecForgeError(
+                    "SF1005", str(manifest_path.relative_to(self.root)), "/",
+                    "package identity/version mismatch",
+                )
+            manifests[namespace] = manifest
+        for namespace, manifest in manifests.items():
+            if manifest.integrates is None:
+                continue
+            for role, reference in (
+                ("domain", manifest.integrates.domain),
+                ("implementation", manifest.integrates.implementation),
+            ):
+                active_version = spec.knowledge_dependencies.get(reference.package)
+                if active_version != reference.version:
+                    raise SpecForgeError(
+                        "SF1006", f"knowledge/{namespace}/{manifest.version}/package.yaml",
+                        f"/integrates/{role}",
+                        f"requires active dependency {reference.package}@{reference.version}",
+                    )
+        return manifests
 
     @staticmethod
     def _reject_concept_cycles(concepts: list[Concept]) -> None:
@@ -121,7 +158,9 @@ class Compiler:
             prefix = f"operation.{op.id}"
             provenance = f"product.yaml#/operations/{op.id}"
             add(prefix, "action", op.action, provenance)
-            add(prefix, "returns", op.resource, provenance)
+            add(prefix, "acts_on", op.acts_on, provenance)
+            if op.returns is not None:
+                add(prefix, "returns", op.returns, provenance)
             add(prefix, "actor", op.actor, provenance)
             add(prefix, "scope", op.scope, provenance)
         return sorted(facts.values(), key=lambda f: (f.subject, f.predicate, str(f.object)))
@@ -224,7 +263,6 @@ class Compiler:
             def supports(pattern: Pattern) -> bool:
                 legacy = (
                     instance.requirement in pattern.satisfies
-                    and pattern.stack == "fastapi-react"
                     and pattern.controls.get(instance.expectation.control) == instance.expectation.value
                 )
                 addressed = bool(
@@ -237,11 +275,18 @@ class Compiler:
                         or (isinstance(pattern.addresses["expectation"], dict) and pattern.addresses["expectation"].get("type") == instance.expectation.value)
                     )
                 )
-                return (legacy or addressed) and all(v.id in pattern.verifications for v in instance.verifications)
+                return (
+                    pattern.stack == spec.product.stack
+                    and (legacy or addressed)
+                    and all(v.id in pattern.verifications for v in instance.verifications)
+                )
 
             matching = [pattern for pattern in patterns if supports(pattern)]
             if not matching:
                 raise SpecForgeError("SF1501", instance.requirement, instance.target, "no compatible implementation pattern")
+            if len(matching) > 1:
+                choices = ", ".join(f"{pattern.id}@{pattern.version}" for pattern in matching)
+                raise SpecForgeError("SF1502", instance.requirement, instance.target, f"ambiguous implementation patterns for stack {spec.product.stack}: {choices}")
             instance.pattern = matching[0].id
             selected_patterns[matching[0].id] = matching[0]
         controls: dict[str, dict[str, Any]] = defaultdict(dict)
@@ -328,7 +373,7 @@ class Compiler:
             if group_by == "rule":
                 return sorted({derivation.rule for derivation in instance.derivations}) or ["declared"]
             if group_by:
-                predicate = "returns" if group_by == "resource" else group_by.removeprefix("fact.")
+                predicate = "acts_on" if group_by == "resource" else group_by.removeprefix("fact.")
                 values = sorted({str(fact.object) for fact in resolved.facts if fact.subject == instance.target and fact.predicate == predicate})
                 return values or ["(none)"]
             return []

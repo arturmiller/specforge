@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from .compiler import Compiler
 from .generation import generate_product
 from .io import content_hash, pretty_json, write_if_changed
-from .model import EvidenceEntry, RequirementStatus, VerificationSpec
+from .model import EvidenceEntry, RequirementStatus, ResolvedSpec, VerificationSpec
 
 
 ALICE = {"Authorization": "Bearer demo-token-alice"}
@@ -27,9 +27,6 @@ VALID_EVENT = {
     "start": "2026-08-10T09:00:00Z",
     "end": "2026-08-10T10:00:00Z",
 }
-ALLOWED_FIELDS = {"description", "end", "id", "location", "owner_id", "start", "title"}
-
-
 @dataclass
 class ValidationResult:
     passed: bool
@@ -74,9 +71,33 @@ def _create(client: TestClient, headers: dict[str, str] = ALICE) -> dict[str, An
     return response.json()
 
 
-def _observe(create_app, requirement: str, target: str, verification: VerificationSpec) -> tuple[dict[str, Any], dict[str, Any], bool]:
+def expected_assertion(resolved: ResolvedSpec, target: str, verification: VerificationSpec) -> dict[str, Any]:
+    assertion = verification.assertion.model_dump(mode="json", exclude_none=True)
+    source = assertion.pop("response_fields_from", None)
+    if source is None:
+        return assertion
+    operation_id = target.removeprefix("operation.")
+    operation = next((item for item in resolved.operations if item.id == operation_id), None)
+    if operation is None or operation.returns is None:
+        raise RuntimeError(f"cannot derive response schema for {target}: operation has no response resource")
+    entity = next((item for item in resolved.entities if item.id == operation.returns), None)
+    if entity is None:
+        raise RuntimeError(f"cannot derive response schema for {target}: unknown entity {operation.returns}")
+    assertion["response_fields"] = sorted(field.response_name or field.name for field in entity.fields)
+    assertion["required_response_fields"] = sorted(
+        field.response_name or field.name for field in entity.fields if not field.optional
+    )
+    return assertion
+
+
+def response_schema_matches(expected: dict[str, Any], observed: dict[str, Any]) -> bool:
+    fields = set(observed.get("response_fields", []))
+    return set(expected.get("required_response_fields", [])) <= fields <= set(expected["response_fields"])
+
+
+def _observe(create_app, resolved: ResolvedSpec, requirement: str, target: str, verification: VerificationSpec) -> tuple[dict[str, Any], dict[str, Any], bool]:
     action = target.removeprefix("operation.").removesuffix("_event")
-    expected = verification.assertion.model_dump(mode="json", exclude_none=True)
+    expected = expected_assertion(resolved, target, verification)
     with _client(create_app) as client:
         if requirement.startswith("PRODUCT-"):
             if action == "create":
@@ -144,7 +165,11 @@ def _observe(create_app, requirement: str, target: str, verification: Verificati
             observed = {"max_requests_per_minute": 60 if statuses[:60] == [404] * 60 and statuses[60] == 429 else -1}
         else:
             raise RuntimeError(f"no verification adapter for {requirement}")
-    return expected, observed, expected == observed
+    if verification.adapter == "response_schema" and "response_fields" in expected:
+        passed = response_schema_matches(expected, observed)
+    else:
+        passed = expected == observed
+    return expected, observed, passed
 
 
 def validate_product(root: Path, product: str) -> ValidationResult:
@@ -165,7 +190,7 @@ def validate_product(root: Path, product: str) -> ValidationResult:
     for instance in resolved.requirements:
         results = []
         for verification in instance.verifications:
-            expected, observed, passed = _observe(create_app, instance.requirement, instance.target, verification)
+            expected, observed, passed = _observe(create_app, resolved, instance.requirement, instance.target, verification)
             results.append(passed)
             display_target = Compiler._display_target(instance.target)
             verification_instance = f"{verification.id}@{display_target}"
