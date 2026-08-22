@@ -1,0 +1,18 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix shapes: <https://specforge.dev/shapes/1.0.0/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+shapes:ProductShape a sh:NodeShape ;
+  sh:targetClass sf:Product ;
+  sh:property [ sh:path dcterms:identifier ; sh:minCount 1 ] .
+
+shapes:OperationShape a sh:NodeShape ;
+  sh:targetClass sf:Operation ;
+  sh:property [ sh:path dcterms:identifier ; sh:minCount 1 ] ;
+  sh:property [ sh:path sf:actsOn ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
+
+shapes:RequirementInstanceShape a sh:NodeShape ;
+  sh:targetClass sf:RequirementInstance ;
+  sh:property [ sh:path sf:appliesTo ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
+  sh:property [ sh:path sf:implementedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .

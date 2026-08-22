@@ -6,7 +6,7 @@ SpecForge V2 is a deterministic requirements compiler with an agentic implementa
 
 ## Quick start
 
-Requirements: Python 3.10+ (or `uv`), Node 24+ for the frontend, and optionally Docker.
+Requirements: Python 3.12+ (or `uv`), Node 24+ for the frontend, and optionally Docker.
 
 ```bash
 uv sync --extra dev
@@ -20,6 +20,9 @@ uv run specforge validate products/calendar
 uv run specforge evidence products/calendar
 uv run specforge report products/calendar
 uv run specforge visualize products/calendar
+uv run specforge sparql products/calendar --query query.rq
+uv run specforge export-rif products/calendar --output rules.rif
+uv run specforge rdf-check generated/calendar/resolved-spec.jsonld
 ```
 
 `visualize` writes a self-contained interactive Spec Explorer to
@@ -52,10 +55,14 @@ npm run dev
 
 ## Deterministic artifacts
 
-`resolve` writes canonical JSON below `generated/calendar/`. V2 contains no templates or template engine; structured compiler artifacts use programmatic serialization and application code is agent-managed. Runtime timestamps exist only in evidence and run records. Knowledge packages are pinned by version and content hash. Reports cover only listed formalized requirements for the recorded revision and make no general legal or regulatory compliance claim.
+`resolve` writes the canonical RDF Dataset as JSON-LD, canonical N-Quads and TriG below `generated/calendar/`, plus SHACL and PROV-O reports. The compatibility JSON projection remains available. Semantic hashes use RDFC-1.0 plus SHA-256. V2 contains no templates or template engine; structured compiler artifacts use programmatic serialization and application code is agent-managed. Runtime timestamps exist only in evidence and run records. Knowledge packages are pinned by version and content hash. Reports cover only listed formalized requirements for the recorded revision and make no general legal or regulatory compliance claim.
 
 Architecture is documented using [arc42 and C4](docs/architecture/arc42.md). The normative specification is [SPEC_V2.md](plan/SPEC_V2.md), with the [V2 acceptance matrix](docs/acceptance-v2.md) linking its criteria to executable evidence.
 
 How Knowledge packages are structured and how the compiler turns them into
 facts, requirements, patterns, and evidence is described in
 [Knowledge in SpecForge](docs/knowledge.md).
+
+The implemented Semantic Web foundation is specified in
+[Semantic-Web-Grundlage für SpecForge](docs/semantic-web-spec.md); the executable
+coverage is tracked in the [Semantic Web conformance matrix](docs/semantic-web-conformance.md).

@@ -18,7 +18,7 @@ This matrix maps every acceptance criterion from `plan/SPEC_V1.md` to executable
 
 Additional governance coverage:
 
-- all DSL operators: `test_rule_dsl_all_any_not_and_equals`,
+- legacy DSL projection operators: `test_legacy_match_projection_still_reads_all_any_not_and_equals`,
 - conflicting policies: `tests/test_conflicts.py`,
 - exact application observations and revision-bound Evidence: `test_generation_and_validation_produce_complete_evidence`.
 

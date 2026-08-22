@@ -1,6 +1,6 @@
 # ADR 0003: No graph database in V1
 
-Status: Accepted
+Status: Partially superseded by ADR 0006
 
 ## Context
 
@@ -13,4 +13,3 @@ Use typed in-memory structures and emit a canonical JSON trace graph.
 ## Consequences
 
 Deployment and reproducibility stay simple. A graph database can later consume the emitted graph without changing compiler semantics.
-

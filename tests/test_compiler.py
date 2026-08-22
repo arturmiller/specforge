@@ -187,7 +187,7 @@ def test_generated_compiler_json_is_pretty_printed():
         assert content == __import__("json").dumps(__import__("json").loads(content), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
-def test_rule_dsl_all_any_not_and_equals():
+def test_legacy_match_projection_still_reads_all_any_not_and_equals():
     compiler = Compiler(ROOT)
     facts = [Fact(id="f1", subject="x", predicate="kind", object="Event", origin=FactOrigin.DECLARED, provenance="test")]
     condition = Condition.model_validate({

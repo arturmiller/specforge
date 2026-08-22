@@ -1,6 +1,6 @@
 # ADR 0002: Restricted declarative rule DSL
 
-Status: Accepted
+Status: Superseded by ADR 0006
 
 ## Context
 
@@ -13,4 +13,3 @@ V1 supports fact matching, variables, `all`, `any`, `not`, and equality. Evaluat
 ## Consequences
 
 The model is explainable and safe to evaluate. The DSL intentionally cannot express every possible policy; definitions that cannot be made machine-decidable remain outside the accepted package.
-

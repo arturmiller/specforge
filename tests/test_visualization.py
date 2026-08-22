@@ -90,7 +90,7 @@ def test_rule_conditions_make_and_or_not_semantics_explicit() -> None:
         "UND (Operation hat die Aktion create ODER Operation hat die Aktion update)",
     ]
     assert rules["rule:privacy/minimize-personal-data-response"]["details"]["wenn"][-1] == (
-        "UND NICHT (Operation hat die Aktion delete)"
+        "UND (Operation hat die Aktion create ODER Operation hat die Aktion read ODER Operation hat die Aktion update)"
     )
 
 

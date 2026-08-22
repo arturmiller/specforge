@@ -285,6 +285,9 @@ class ResolvedSpec(StrictModel):
     controls: dict[str, dict[str, Any]]
     trace_file: str
     content_hash: str = ""
+    legacy_content_hash: str = ""
+    conforms_to: str = "https://specforge.dev/vocab/1.0.0"
+    hash_algorithm: str = "rdfc-1.0+sha256"
 
 
 class EvidenceEntry(StrictModel):

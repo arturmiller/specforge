@@ -44,6 +44,10 @@ def test_generation_and_validation_produce_complete_evidence(tmp_path: Path):
     assert all(entry["git_commit"] and entry["resolved_spec_hash"] == resolved.content_hash for entry in evidence["entries"])
     assert all("@operation:" in entry["verification_id"] for entry in evidence["entries"])
     assert all(entry["verification_definition"].startswith("TEST-") for entry in evidence["entries"])
+    report = root / evidence["shacl_report"]
+    assert report.is_file()
+    assert "sh:ValidationReport" in report.read_text(encoding="utf-8")
+    assert "sh:ValidationResult" in report.read_text(encoding="utf-8")
 
 
 def test_privacy_verification_derives_fields_from_resolved_response_schema():

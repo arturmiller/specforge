@@ -79,7 +79,7 @@ Ausgaben:
 
 ## 4. Lösungsstrategie
 
-SpecForge verwendet eine Compiler-Pipeline mit persistierbaren Zwischenartefakten. Eine typisierte Intermediate Representation entkoppelt Autorenformate von Resolver und Generator. Semantik wird als kleiner gerichteter Graph berechnet. Eine eingeschränkte deklarative Regel-DSL erzeugt Requirement-Instanzen. Implementierungsmuster übersetzen technologieunabhängige Controls in konkrete Artefakte und Verifikationen.
+SpecForge verwendet eine Compiler-Pipeline mit persistierbaren Zwischenartefakten. Ein RDF Dataset mit stabilen IRIs und Named Graphs ist die kanonische Intermediate Representation; Pydantic-Modelle und das bisherige JSON sind Ein- beziehungsweise Kompatibilitätsadapter. Sichere positive Datalog-Regeln erzeugen am kleinsten Fixpunkt Requirement-Instanzen. SHACL validiert das Metamodell und liefert standardisierte Reports, PROV-O beschreibt die Herkunft. Implementierungsmuster übersetzen technologieunabhängige Controls in konkrete Artefakte und Verifikationen.
 
 Mehrdeutigkeit wird nicht als Laufzeitstatus modelliert: Jede Requirement-Definition muss mindestens eine ausführbare Verification Specification besitzen. Kann sie nicht eindeutig geprüft werden, schlägt die Package-Validierung fehl.
 
@@ -122,9 +122,9 @@ C4Component
     title Component Diagram – Compiler Core
     Container_Boundary(core, "Compiler Core") {
         Component(loader, "Package Loader", "Lädt und validiert versionierte Eingaben")
-        Component(normalizer, "Normalizer", "Erzeugt die kanonische IR und deklarierte Facts")
-        Component(semantics, "Semantic Enricher", "Berechnet die semantische Closure")
-        Component(resolver, "Requirement Resolver", "Wertet Regeln deterministisch bis zum Fixpunkt aus")
+        Component(normalizer, "RDF Adapter", "Erzeugt das kanonische RDF Dataset und deklarierte Assertions")
+        Component(semantics, "Datalog Engine", "Berechnet sichere positive Ableitungen bis zum Fixpunkt")
+        Component(resolver, "Requirement Resolver", "Projiziert abgeleitete Requirement-Instanzen")
         Component(conflicts, "Conflict Detector", "Erkennt widersprüchliche Controls")
         Component(trace, "Trace Builder", "Erzeugt Ableitungs- und Provenance-Kanten")
         Component(spec, "Resolved Spec Builder", "Erzeugt die aufgelöste Systemspezifikation")
@@ -146,9 +146,9 @@ Verantwortungsregel: Der Resolver entscheidet, welche Requirements gelten. Der V
 ### 6.1 Resolve
 
 ```text
-CLI → Package Loader → Normalizer → Semantic Enricher
+CLI → Package Loader → RDF Adapter → Datalog Engine
     → Requirement Resolver → Conflict Detector
-    → Trace Builder → Resolved Spec Builder
+    → SHACL → PROV Trace → RDF-/Kompatibilitätsausgaben
 ```
 
 Bei ungültigem Schema, undefiniertem Begriff, nicht ausführbarer Requirement-Verifikation oder Regelkonflikt endet der Lauf ohne Resolved Spec.

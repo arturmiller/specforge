@@ -1,0 +1,29 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+
+<https://specforge.dev/vocab/1.0.0> a owl:Ontology ;
+  owl:versionInfo "1.0.0" .
+
+sf:Product a rdfs:Class ; rdfs:label "Product"@de .
+sf:Entity a rdfs:Class ; rdfs:label "Entity"@de .
+sf:Operation a rdfs:Class ; rdfs:label "Operation"@de .
+sf:RequirementDefinition a rdfs:Class ; rdfs:label "Requirement Definition"@de .
+sf:RequirementInstance a rdfs:Class ; rdfs:label "Requirement Instance"@de .
+sf:Rule a rdfs:Class ; rdfs:label "Rule"@de .
+sf:ImplementationPattern a rdfs:Class ; rdfs:label "Implementation Pattern"@de .
+sf:Verification a rdfs:Class ; rdfs:label "Verification"@de .
+sf:Assertion a rdfs:Class ; rdfs:label "Assertion"@de .
+
+sf:actsOn a rdf:Property ; rdfs:label "bearbeitet"@de ;
+  rdfs:comment "Die Operation bearbeitet diese Ressource."@de .
+sf:returns a rdf:Property ; rdfs:label "liefert"@de ;
+  rdfs:comment "Die Operation gibt eine Repräsentation dieser Entität zurück."@de .
+sf:bindsDomain a rdf:Property ; rdfs:subPropertyOf dcterms:relation ;
+  rdfs:label "verbindet Domäne"@de ;
+  rdfs:comment "Das Integrationspaket verbindet Patterns mit dieser fachlichen Domäne."@de .
+sf:bindsImplementation a rdf:Property ; rdfs:subPropertyOf dcterms:relation ;
+  rdfs:label "verbindet Implementierung"@de ;
+  rdfs:comment "Das Integrationspaket verwendet diesen technischen Stack."@de .

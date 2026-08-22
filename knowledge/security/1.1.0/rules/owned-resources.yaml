@@ -6,7 +6,9 @@ when:
     - {fact: {subject: "$operation", predicate: acts_on, object: "$resource"}}
     - {fact: {subject: "$resource", predicate: has_field, object: "$owner_field"}}
     - {fact: {subject: "$owner_field", predicate: relation, object: ownership}}
-    - not:
-        fact: {subject: "$operation", predicate: action, object: create}
+    - any:
+        - {fact: {subject: "$operation", predicate: action, object: read}}
+        - {fact: {subject: "$operation", predicate: action, object: update}}
+        - {fact: {subject: "$operation", predicate: action, object: delete}}
 then: {requirement: SEC-002, target: "$operation"}
 source: {type: internal_policy, document: security-policy, version: "1.0.0", section: ownership}

@@ -1,6 +1,6 @@
 # ADR 0001: Canonical typed intermediate model
 
-Status: Accepted
+Status: Superseded by ADR 0006
 
 ## Context
 
@@ -13,4 +13,3 @@ Pydantic models form the compiler IR. YAML is validated at the boundary and cano
 ## Consequences
 
 Authors receive precise validation errors and file ordering cannot change results. Schema migrations must be explicit.
-

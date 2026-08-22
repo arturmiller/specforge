@@ -8,6 +8,7 @@ import typer
 
 from .compiler import Compiler
 from .errors import SpecForgeError
+from .io import write_if_changed
 from .model import ResolvedSpec
 
 app = typer.Typer(no_args_is_help=True, pretty_exceptions_enable=False)
@@ -253,6 +254,66 @@ def visualize(product: str) -> None:
 
         typer.echo(str(create_visualization(root(), product)))
     except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
+@app.command("sparql")
+def sparql_command(
+    product: str,
+    query_file: Path = typer.Option(..., "--query", help="Local SPARQL SELECT/ASK query."),
+) -> None:
+    """Query the resolved RDF Dataset without requiring a graph database."""
+    try:
+        query = query_file.read_text(encoding="utf-8")
+        result = Compiler(root()).semantic_dataset(product).query(query)
+        if getattr(result, "type", None) == "ASK":
+            typer.echo(json.dumps({"boolean": bool(result.askAnswer)}))
+            return
+        typer.echo(json.dumps([
+            {str(name): (str(value) if value is not None else None) for name, value in row.asdict().items()}
+            for row in result
+        ], ensure_ascii=False, sort_keys=True, indent=2))
+    except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
+@app.command("export-rif")
+def export_rif_command(product: str, output: Path | None = typer.Option(None, "--output")) -> None:
+    """Export the active positive Rule set as RIF Core XML."""
+    try:
+        from .datalog import compile_requirement_rules
+        from .rif import export_rules
+
+        _, _, _, rules, _, _ = Compiler(root()).load_inputs(product)
+        rendered = export_rules(compile_requirement_rules(rules))
+        if output:
+            write_if_changed(output, rendered)
+            typer.echo(str(output))
+        else:
+            typer.echo(rendered, nl=False)
+    except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
+@app.command("rdf-check")
+def rdf_check_command(source: Path) -> None:
+    """Parse a local JSON-LD/Turtle/N-Quads/TriG input and validate its RDF contract."""
+    try:
+        from .semantic import SemanticDataset
+        from .shacl import validate_dataset
+
+        semantic = SemanticDataset.parse(source)
+        result = validate_dataset(semantic)
+        typer.echo(json.dumps({
+            "conforms": result.conforms,
+            "content_hash": semantic.content_hash(),
+            "quads": sum(1 for _ in semantic.dataset.quads()),
+        }, sort_keys=True))
+        if not result.conforms:
+            raise typer.Exit(1)
+    except typer.Exit:
+        raise
+    except (OSError, ValueError) as exc:
         fail(exc)
 
 

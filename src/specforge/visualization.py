@@ -8,6 +8,9 @@ from typing import Any
 
 from .compiler import Compiler
 from .io import read_yaml, write_if_changed
+from .glossary import load_academy_glossary, load_product_glossary as _load_product_glossary
+from .semantic import RELATION_DEFINITIONS
+from .views import query_view
 
 
 COLORS = {
@@ -25,58 +28,19 @@ COLORS = {
     "artifact": "#77808b",
 }
 
+_EDGE_LABELS = {key: key.replace("_", " ") for key in RELATION_DEFINITIONS}
 RELATIONSHIP_GLOSSARY = {
-    "depends on": "Das Produkt lädt dieses Knowledge-Paket in der angegebenen Version.",
-    "binds domain": "Das Integrationspaket verbindet Patterns mit dieser fachlichen Domäne.",
-    "binds implementation": "Das Integrationspaket verwendet diesen technischen Stack.",
-    "defines": "Das Produkt definiert diese fachliche Entität.",
-    "has field": "Die Entität besitzt dieses deklarierte Feld.",
-    "classified as": "Das Element trägt diese fachliche oder schutzbezogene Klassifikation.",
-    "is a": "Der Begriff ist eine Spezialisierung des verbundenen Oberbegriffs.",
-    "offers": "Das Produkt stellt diese ausführbare Operation bereit.",
-    "acts on": "Die Operation bearbeitet diese Ressource.",
-    "returns": "Die Operation gibt eine Repräsentation dieser Entität zurück.",
-    "actor": "Diese Entität führt die Operation aus.",
-    "derives": "Die Rule leitet diese Requirement-Instanz oder -Definition her.",
-    "supports": "Dieses Faktum ist eine Prämisse für das hergeleitete Faktum.",
-    "instantiated as": "Aus der allgemeinen Requirement Definition entsteht diese konkrete Instanz.",
-    "applies to": "Die Requirement-Instanz gilt für diese konkrete Operation.",
-    "matches": "Dieses Faktum erfüllt eine Bedingung der Rule.",
-    "implemented by": "Dieses Pattern beschreibt die vorgesehene Umsetzung des Requirements.",
-    "verified by": "Diese Verification prüft die Requirement-Instanz ausführbar.",
-    "provides": "Das Pattern stellt diese Verification bereit.",
-    "touches": "Die Umsetzung des Patterns verändert oder erzeugt dieses Artefakt.",
-    "contains": "Das Knowledge-Paket enthält diese Definition.",
+    _EDGE_LABELS[key]: definition
+    for key, (_, _, definition) in RELATION_DEFINITIONS.items()
 }
 
 
 def load_glossary(root: Path) -> dict[str, str]:
-    """Read the Academy glossary without creating a second terminology source."""
-    path = root / "training-prototype" / "app.js"
-    if not path.exists():
-        return {}
-    glossary: dict[str, str] = {}
-    source = path.read_text(encoding="utf-8")
-    for block in re.findall(r"terms:\s*(\[\[.*?\]\])", source):
-        try:
-            terms = json.loads(block)
-        except json.JSONDecodeError:
-            continue
-        for term, definition in terms:
-            glossary.setdefault(term, definition)
-    additions = path.with_name("glossary.json")
-    if additions.exists():
-        for term, definition in json.loads(additions.read_text(encoding="utf-8")).items():
-            glossary.setdefault(term, definition)
-    return dict(sorted(glossary.items(), key=lambda item: (-len(item[0]), item[0].casefold())))
+    return load_academy_glossary(root)
 
 
 def load_product_glossary(root: Path, product: str | Path) -> dict[str, str]:
-    path = Compiler(root).product_file(product).with_name("glossary.yaml")
-    if not path.exists():
-        return {}
-    glossary = read_yaml(path)
-    return dict(sorted(glossary.items(), key=lambda item: (-len(item[0]), item[0].casefold())))
+    return _load_product_glossary(Compiler(root).product_file(product))
 
 
 def _display(value: Any) -> str:
@@ -155,6 +119,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
     spec, concepts, definitions, rules, patterns, packages = compiler.load_inputs(product)
     manifests = compiler.load_package_manifests(product)
     resolved = compiler.resolve(product, write=False)
+    semantic = compiler.semantic_dataset(product)
     product_path = compiler.product_file(product).relative_to(root).as_posix()
     nodes: dict[str, dict[str, Any]] = {}
     edges: set[tuple[str, str, str]] = set()
@@ -184,11 +149,26 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
             package_kind=manifest.kind or "legacy", version=metadata["version"],
             owner=manifest.owner, purpose=manifest.purpose, content_hash=metadata["hash"],
         )
-        edge(product_id, package_id, "depends on")
-    for name, manifest in sorted(manifests.items()):
-        if manifest.integrates:
-            edge(f"package:{name}", f"package:{manifest.integrates.domain.package}", "binds domain")
-            edge(f"package:{name}", f"package:{manifest.integrates.implementation.package}", "binds implementation")
+    package_names = {
+        str(semantic.iris.package(name, metadata["version"])): name
+        for name, metadata in packages.items()
+    }
+    product_iri = str(semantic.iris.product(spec.product.id, spec.product.version))
+    relation_labels = {
+        str(value[0]): _EDGE_LABELS[key] for key, value in RELATION_DEFINITIONS.items()
+    }
+    relationship_glossary = {
+        relation_labels[str(row.relation)]: str(row.definition)
+        for row in query_view(semantic, "relationship-glossary")
+        if str(row.relation) in relation_labels
+    }
+    for row in query_view(semantic, "packages"):
+        source_name = package_names.get(str(row.source))
+        target_name = package_names.get(str(row.target))
+        source = product_id if str(row.source) == product_iri else f"package:{source_name}"
+        target = f"package:{target_name}"
+        if source in nodes and target in nodes:
+            edge(source, target, relation_labels[str(row.relation)])
 
     for entity in spec.entities:
         entity_id = node(f"entity:{entity.id}", "entity", entity.id, source=product_path)
@@ -366,8 +346,13 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
         if requirement_id in instantiated:
             nodes[f"requirement-definition:{requirement_id}"]["definition"] = True
 
-    academy_glossary = load_glossary(root)
-    product_glossary = load_product_glossary(root, product)
+    glossary_rows = list(query_view(semantic, "glossary"))
+    academy_glossary = {
+        str(row.label): str(row.definition) for row in glossary_rows if str(row.schemeName) == "academy"
+    }
+    product_glossary = {
+        str(row.label): str(row.definition) for row in glossary_rows if str(row.schemeName) == "product"
+    }
     return {
         "product": spec.product.model_dump(mode="json"),
         "nodes": sorted(nodes.values(), key=lambda item: (item["kind"], item["label"], item["id"])),
@@ -377,7 +362,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
             if source in nodes and target in nodes
         ],
         "colors": COLORS,
-        "relationshipGlossary": RELATIONSHIP_GLOSSARY,
+        "relationshipGlossary": relationship_glossary,
         "glossary": {**academy_glossary, **product_glossary},
         "glossaryKinds": {
             **{term: "academy" for term in academy_glossary},

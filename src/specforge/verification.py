@@ -11,11 +11,14 @@ from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
+from rdflib import Graph, Literal, URIRef
+from rdflib.namespace import PROV, RDF, SH
 
 from .compiler import Compiler
 from .generation import generate_product
 from .io import content_hash, pretty_json, write_if_changed
 from .model import EvidenceEntry, RequirementStatus, ResolvedSpec, VerificationSpec
+from .semantic import SF
 
 
 ALICE = {"Authorization": "Bearer demo-token-alice"}
@@ -206,6 +209,35 @@ def validate_product(root: Path, product: str) -> ValidationResult:
         "requirement_statuses": dict(sorted(status_by_instance.items())),
     }
     evidence_path = root / "evidence" / resolved.product.id / "latest.json"
+    report = Graph()
+    report.bind("sh", SH)
+    report.bind("prov", PROV)
+    report.bind("sf", SF)
+    report_iri = URIRef(f"https://specforge.dev/validation-report/{resolved.product.id}/{revision}")
+    run_iri = URIRef(f"https://specforge.dev/run/verify-{resolved.product.id}-{revision}")
+    report.add((report_iri, RDF.type, SH.ValidationReport))
+    report.add((report_iri, SH.conforms, Literal(all(entry.result == "PASS" for entry in entries))))
+    report.add((run_iri, RDF.type, PROV.Activity))
+    report.add((report_iri, PROV.wasGeneratedBy, run_iri))
+    for entry in entries:
+        result_iri = URIRef(f"https://specforge.dev/validation-result/{entry.id}")
+        focus_iri = compiler.semantic_dataset(product).iris.requirement_instance(
+            resolved.product.id, entry.requirement_instance
+        )
+        report.add((report_iri, SH.result, result_iri))
+        report.add((result_iri, RDF.type, SH.ValidationResult))
+        report.add((result_iri, SH.focusNode, focus_iri))
+        report.add((result_iri, SH.resultSeverity, SH.Info if entry.result == "PASS" else SH.Violation))
+        report.add((result_iri, SH.resultMessage, Literal(f"{entry.verification_id}: {entry.result}")))
+        report.add((result_iri, SF.expectedValue, Literal(json.dumps(entry.expected, sort_keys=True))))
+        report.add((result_iri, SF.observedValue, Literal(json.dumps(entry.observed, sort_keys=True))))
+        report.add((result_iri, PROV.wasGeneratedBy, run_iri))
+    report_path = evidence_path.with_name("shacl-report.ttl")
+    write_if_changed(report_path, report.serialize(format="turtle"))
+    semantic = compiler.semantic_dataset(product)
+    semantic.add_evidence_graph(report)
+    semantic.write(root / "generated" / resolved.product.id)
+    bundle["shacl_report"] = str(report_path.relative_to(root).as_posix())
     write_if_changed(evidence_path, pretty_json(bundle))
     passed = all(entry.result == "PASS" for entry in entries)
     failed = [entry for entry in entries if entry.result == "FAIL"]

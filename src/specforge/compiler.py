@@ -7,17 +7,22 @@ from typing import Any
 from pydantic import ValidationError
 
 from .errors import SpecForgeError
+from .datalog import evaluate as evaluate_datalog
 from .io import canonical_json, content_hash, directory_hash, pretty_json, read_yaml, write_if_changed
 from .model import (
     Concept, Condition, Derivation, Fact, FactOrigin, KnowledgeVersions, PackageManifest, Pattern,
     ProductSpec, RequirementDefinition, RequirementInstance, RequirementStatus,
     ResolvedSpec, Rule,
 )
+from .semantic import SemanticDataset
+from .shacl import validate_dataset
+from .glossary import load_academy_glossary, load_product_glossary
 
 
 class Compiler:
     def __init__(self, root: Path):
         self.root = root.resolve()
+        self._semantic_cache: dict[Path, SemanticDataset] = {}
 
     def product_file(self, product: str | Path) -> Path:
         path = Path(product)
@@ -240,20 +245,26 @@ class Compiler:
 
     def resolve(self, product: str | Path, write: bool = True) -> ResolvedSpec:
         spec, concepts, definitions, rules, patterns, packages = self.load_inputs(product)
-        facts = self.enrich(self.normalize(spec), concepts)
+        manifests = self.load_package_manifests(product)
+        datalog = evaluate_datalog(self.normalize(spec), concepts, rules, self.fact_id)
+        facts = datalog.facts
         instances: dict[tuple[str, str], RequirementInstance] = {}
         for declared in sorted(spec.declared_requirements, key=lambda x: x.id):
             definition = definitions[declared.id]
             target = f"operation.{declared.operation}"
             instances[(declared.id, target)] = RequirementInstance(id=f"{declared.id}@{target}", requirement=declared.id, requirement_version=definition.version, statement=definition.statement, source=definition.source, target=target, kind="declared", status=RequirementStatus.REQUIRED, expectation=definition.expectation, verifications=definition.verifications)
-        for rule in rules:
-            for bindings, used in self.match(rule.when, facts, {}):
-                target = rule.then.target
-                if target.startswith("$"):
-                    target = str(bindings[target[1:]])
-                definition = definitions[rule.then.requirement]
+        rule_versions = {rule.id: rule.version for rule in rules}
+        for row in datalog.requirement_rows:
+            target, requirement_id = map(str, row.values)
+            definition = definitions[requirement_id]
+            for proof in sorted(row.proofs, key=repr):
                 key = (definition.id, target)
-                derivation = Derivation(rule=rule.id, rule_version=rule.version, facts=sorted({f.id for f in used}), bindings=dict(sorted(bindings.items())))
+                derivation = Derivation(
+                    rule=proof.rule,
+                    rule_version=rule_versions[proof.rule],
+                    facts=list(proof.premises),
+                    bindings=proof.binding_values(),
+                )
                 if key not in instances:
                     instances[key] = RequirementInstance(id=f"{definition.id}@{target}", requirement=definition.id, requirement_version=definition.version, statement=definition.statement, source=definition.source, target=target, kind="derived", status=RequirementStatus.REQUIRED, expectation=definition.expectation, verifications=definition.verifications, derivations=[derivation])
                 elif derivation not in instances[key].derivations:
@@ -308,8 +319,25 @@ class Compiler:
             if fact.predicate in {"classified_as", "contains_classification"}:
                 classifications[fact.subject].append(str(fact.object))
         result = ResolvedSpec(product=spec.product, knowledge=KnowledgeVersions(packages=packages), entities=sorted(spec.entities, key=lambda x: x.id), operations=sorted(spec.operations, key=lambda x: x.id), classifications={k: sorted(set(v)) for k, v in sorted(classifications.items())}, facts=facts, requirements=sorted(instances.values(), key=lambda x: x.id), controls={k: dict(sorted(v.items())) for k, v in sorted(controls.items())}, trace_file="trace.json")
-        hash_input = result.model_dump(mode="json", exclude={"content_hash"})
-        result.content_hash = content_hash(hash_input)
+        result.legacy_content_hash = content_hash(result.model_dump(
+            mode="json",
+            exclude={"content_hash", "legacy_content_hash", "conforms_to", "hash_algorithm"},
+        ))
+        semantic = SemanticDataset()
+        semantic.add_source_models(
+            spec, manifests, concepts, definitions.values(), rules, patterns
+        )
+        semantic.add_glossary(load_academy_glossary(self.root), scheme_name="academy")
+        semantic.add_glossary(load_product_glossary(self.product_file(product)), scheme_name="product")
+        semantic.add_resolved(result, proofs=datalog.proofs)
+        semantic.finalize()
+        shacl = validate_dataset(semantic)
+        if not shacl.conforms:
+            raise SpecForgeError("SF3101", str(product), "/", shacl.report_text)
+        semantic.add_evidence_graph(shacl.report_graph)
+        result.content_hash = semantic.content_hash()
+        semantic.add_hash_metadata(result.content_hash)
+        self._semantic_cache[self.product_file(product).resolve()] = semantic
         if write:
             out = self.root / "generated" / spec.product.id
             data = result.model_dump(mode="json")
@@ -322,7 +350,16 @@ class Compiler:
             semantic_facts = [f.model_dump(mode="json") for f in facts]
             write_if_changed(out / "normalized-facts.json", pretty_json(declared_facts))
             write_if_changed(out / "semantic-facts.json", pretty_json(semantic_facts))
+            semantic.write(out)
+            write_if_changed(out / "shacl-report.ttl", shacl.report_graph.serialize(format="turtle"))
         return result
+
+    def semantic_dataset(self, product: str | Path) -> SemanticDataset:
+        """Resolve the product and return its canonical RDF Dataset."""
+        cache_key = self.product_file(product).resolve()
+        if cache_key not in self._semantic_cache:
+            self.resolve(product, write=False)
+        return self._semantic_cache[cache_key]
 
     @staticmethod
     def _display_target(target: str) -> str:

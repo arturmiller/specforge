@@ -168,10 +168,12 @@ source:
   section: authenticated-personal-data
 ```
 
-Die eingeschränkte DSL kennt `fact`, `all`, `any`, `not` und `equals`. Ein mit
+Die eingeschränkte DSL kennt `fact`, `all`, `any` und `equals`. Ein mit
 `$` beginnender Wert ist eine Variable; die erste passende Tatsache bindet sie,
 weitere Bedingungen müssen dieselbe Bindung erfüllen. Die Auswertung ist
-seiteneffektfrei. `then.requirement` muss auf eine geladene Definition zeigen;
+als sicheres positives Datalog bis zum kleinsten Fixpunkt seiteneffektfrei.
+`not` ist wegen RDFs Open-World-Semantik nicht unterstützt; Ausnahmen werden
+als positive `any`-Alternativen formuliert. `then.requirement` muss auf eine geladene Definition zeigen;
 `then.target` darf eine gebundene Variable verwenden. Doppelte Regel-IDs sind
 in Kombination mit ihrer Version verboten.
 
