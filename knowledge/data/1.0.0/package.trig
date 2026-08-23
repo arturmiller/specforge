@@ -1,0 +1,58 @@
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix package: <https://specforge.dev/package/data/> .
+
+# Dieser Named Graph beschreibt Identität und Metadaten des Knowledge Packages data.
+package:graph-metadata {
+  # Diese Dataset-Ressource bezeichnet data in Version 1.0.0.
+  package:1.0.0 a dcat:Dataset, sf:DomainPackage ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "data" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "1.0.0" ;
+    # Diese Aussage gibt der Ressource einen verständlichen Titel.
+    dcterms:title "data Knowledge" ;
+    # Diese Aussage benennt das verantwortliche Team oder den Herausgeber.
+    dcterms:publisher "architecture-team" .
+
+  # Diese Aussage katalogisiert patterns.ttl als Distribution dieser Package-Version.
+  <https://specforge.dev/package/data/1.0.0> dcat:distribution <https://specforge.dev/package/data/1.0.0/distribution/patterns.ttl> .
+
+  # Diese Ressource beschreibt die lokal ausgelieferte Datei patterns.ttl.
+  <https://specforge.dev/package/data/1.0.0/distribution/patterns.ttl> a dcat:Distribution ;
+    # Diese Aussage legt den stabilen Dateinamen der Distribution fest.
+    dcterms:identifier "patterns.ttl" ;
+    # Diese Aussage nennt den standardisierten Medientyp der Distribution.
+    dcat:mediaType "text/turtle" .
+
+  # Diese Aussage katalogisiert requirements.ttl als Distribution dieser Package-Version.
+  <https://specforge.dev/package/data/1.0.0> dcat:distribution <https://specforge.dev/package/data/1.0.0/distribution/requirements.ttl> .
+
+  # Diese Ressource beschreibt die lokal ausgelieferte Datei requirements.ttl.
+  <https://specforge.dev/package/data/1.0.0/distribution/requirements.ttl> a dcat:Distribution ;
+    # Diese Aussage legt den stabilen Dateinamen der Distribution fest.
+    dcterms:identifier "requirements.ttl" ;
+    # Diese Aussage nennt den standardisierten Medientyp der Distribution.
+    dcat:mediaType "text/turtle" .
+
+  # Diese Aussage katalogisiert rules.rif.xml als Distribution dieser Package-Version.
+  <https://specforge.dev/package/data/1.0.0> dcat:distribution <https://specforge.dev/package/data/1.0.0/distribution/rules.rif.xml> .
+
+  # Diese Ressource beschreibt die lokal ausgelieferte Datei rules.rif.xml.
+  <https://specforge.dev/package/data/1.0.0/distribution/rules.rif.xml> a dcat:Distribution ;
+    # Diese Aussage legt den stabilen Dateinamen der Distribution fest.
+    dcterms:identifier "rules.rif.xml" ;
+    # Diese Aussage nennt den standardisierten Medientyp der Distribution.
+    dcat:mediaType "application/rif+xml" .
+
+  # Diese Aussage katalogisiert rules.ttl als Distribution dieser Package-Version.
+  <https://specforge.dev/package/data/1.0.0> dcat:distribution <https://specforge.dev/package/data/1.0.0/distribution/rules.ttl> .
+
+  # Diese Ressource beschreibt die lokal ausgelieferte Datei rules.ttl.
+  <https://specforge.dev/package/data/1.0.0/distribution/rules.ttl> a dcat:Distribution ;
+    # Diese Aussage legt den stabilen Dateinamen der Distribution fest.
+    dcterms:identifier "rules.ttl" ;
+    # Diese Aussage nennt den standardisierten Medientyp der Distribution.
+    dcat:mediaType "text/turtle" .
+}

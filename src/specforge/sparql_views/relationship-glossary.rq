@@ -1,0 +1,15 @@
+# Liefert deutsche Namen und Erklärungen aller im Explorer angezeigten Beziehungen.
+SELECT ?relation ?label ?definition WHERE {
+  # Eine Beziehung muss als RDF Property mit deutschem Label und Kommentar beschrieben sein.
+  GRAPH <https://specforge.dev/graph/vocabulary> {
+    # Nur formal als RDF Property deklarierte Ressourcen sind Beziehungen.
+    ?relation a rdf:Property .
+    # Dieses Label ist der kurze deutsche Anzeigename der Beziehung.
+    ?relation rdfs:label ?label .
+    # Dieser Kommentar erklärt die fachliche Bedeutung der Beziehung.
+    ?relation rdfs:comment ?definition .
+    # Die stabile kurze Kantenbezeichnung ist englisch, ihre Hover-Erklärung deutsch.
+    FILTER(LANG(?label) = "en" && LANG(?definition) = "de")
+  }
+}
+ORDER BY ?relation

@@ -1,5 +1,0 @@
-name: calendar
-version: "1.1.0"
-owner: calendar-product-team
-kind: domain
-purpose: Defines Calendar concepts, requirements, and domain rules.

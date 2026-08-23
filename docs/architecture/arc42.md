@@ -29,9 +29,10 @@ Stakeholder:
 - Compiler und Backend werden in Python implementiert.
 - Die Kalenderanwendung verwendet FastAPI, SQLite, React und TypeScript.
 - V1 läuft vollständig lokal und wird über Docker Compose startbar sein.
-- YAML ist das Autorenformat; kanonisches JSON ist das interne Austausch- und Hashformat.
+- TriG/Turtle und RIF Core sind die fachlichen Autorenformate; SHACL ist ihr
+  öffentlicher Vertrag und RDFC-1.0 plus SHA-256 bestimmt den semantischen Hash.
 - Der deterministische Entscheidungspfad enthält kein LLM.
-- V1 verwendet weder Graphdatenbank noch RDF/OWL-Infrastruktur.
+- V1 verwendet keine Graphdatenbank; RDFLib und pySHACL laufen vollständig im Prozess.
 - Alle Requirements müssen maschinell entscheidbar sein. Eine unzureichende Definition ist ein Compile-/Package-Fehler.
 - Zentrale Knowledge Packages werden vom Produkt referenziert, nicht in dessen Spec kopiert.
 
@@ -79,7 +80,7 @@ Ausgaben:
 
 ## 4. Lösungsstrategie
 
-SpecForge verwendet eine Compiler-Pipeline mit persistierbaren Zwischenartefakten. Ein RDF Dataset mit stabilen IRIs und Named Graphs ist die kanonische Intermediate Representation; Pydantic-Modelle und das bisherige JSON sind Ein- beziehungsweise Kompatibilitätsadapter. Sichere positive Datalog-Regeln erzeugen am kleinsten Fixpunkt Requirement-Instanzen. SHACL validiert das Metamodell und liefert standardisierte Reports, PROV-O beschreibt die Herkunft. Implementierungsmuster übersetzen technologieunabhängige Controls in konkrete Artefakte und Verifikationen.
+SpecForge verwendet eine Compiler-Pipeline mit persistierbaren Zwischenartefakten. TriG/Turtle und RIF Core sind die normativen Autorenformate. Ein RDF Dataset mit stabilen IRIs und Named Graphs ist die kanonische Intermediate Representation; Pydantic-Modelle und JSON sind ausschließlich interne beziehungsweise kompatible Projektionen. Sichere positive Datalog-Regeln erzeugen am kleinsten Fixpunkt Requirement-Instanzen. SHACL validiert Autorenquellen und das aufgelöste Metamodell, PROV-O beschreibt die Herkunft.
 
 Mehrdeutigkeit wird nicht als Laufzeitstatus modelliert: Jede Requirement-Definition muss mindestens eine ausführbare Verification Specification besitzen. Kann sie nicht eindeutig geprüft werden, schlägt die Package-Validierung fehl.
 
@@ -94,10 +95,10 @@ C4Container
 
     System_Boundary(sf, "SpecForge") {
         Container(cli, "SpecForge CLI", "Python, Typer", "Orchestriert Compiler, Generator, Verifikation und Reports")
-        Container(compiler, "Compiler Core", "Python, Pydantic", "Validiert, normalisiert, inferiert und löst Requirements auf")
+        Container(compiler, "Compiler Core", "Python, RDFLib, pySHACL", "Validiert RDF/RIF, inferiert und löst Requirements auf")
         Container(generator, "Deterministische Serializer", "Python", "Erzeugt kanonische strukturierte Compiler-Artefakte ohne Templates")
         Container(verifier, "Verification Runner", "pytest und Adapter", "Führt maschinelle Prüfungen aus")
-        ContainerDb(artifacts, "Artifact Store", "YAML/JSON/Dateisystem", "Specs, Traces, Ergebnisse und Evidence")
+        ContainerDb(artifacts, "Artifact Store", "RDF/RIF/Dateisystem", "Specs, Traces, Ergebnisse und Evidence")
         Container(web, "Calendar Web App", "React, TypeScript", "Kalender-Benutzeroberfläche")
         Container(api, "Calendar API", "FastAPI, SQLAlchemy", "Event CRUD, Authentifizierung und Autorisierung")
         ContainerDb(db, "Calendar DB", "SQLite", "Benutzer und Events")
@@ -212,7 +213,7 @@ Die Demo-Authentifizierung ist ausdrücklich nicht produktionsreif. Autorisierun
 
 ## 9. Architekturentscheidungen
 
-- YAML/Pydantic statt OWL in V1.
+- TriG/Turtle, SHACL und RIF Core statt einer proprietären YAML-Autorensprache; OWL bleibt ohne aktives Conformance-Profil.
 - Eigene beschränkte Regel-DSL statt universeller Rule Engine.
 - In-Memory-Graph und JSON statt Graphdatenbank.
 - Hybrid-Generierung statt Überschreiben handgeschriebener Fachlogik.

@@ -1,5 +1,0 @@
-id: User
-version: "1.0.0"
-is_a: [Person]
-source: {type: internal_taxonomy, document: privacy-concepts, version: "1.0.0", section: user}
-

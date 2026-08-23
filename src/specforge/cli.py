@@ -257,6 +257,18 @@ def visualize(product: str) -> None:
         fail(exc)
 
 
+@app.command()
+def training(product: str = typer.Argument("products/calendar")) -> None:
+    """Build the offline guided learning journey from the semantic dataset."""
+    try:
+        from .training import build_training_scenario
+
+        typer.echo(str(build_training_scenario(root(), product)))
+        typer.echo("Open training-prototype/index.html in a browser.")
+    except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
 @app.command("sparql")
 def sparql_command(
     product: str,
@@ -295,18 +307,42 @@ def export_rif_command(product: str, output: Path | None = typer.Option(None, "-
         fail(exc)
 
 
+@app.command("export-prolog")
+def export_prolog_command(product: str, output: Path | None = typer.Option(None, "--output")) -> None:
+    """Generate a commented, non-normative Prolog reading view of the active Rules."""
+    try:
+        from .datalog import compile_requirement_rules
+        from .rif import export_prolog
+
+        _, _, _, rules, _, _ = Compiler(root()).load_inputs(product)
+        rendered = export_prolog(compile_requirement_rules(rules))
+        if output:
+            write_if_changed(output, rendered)
+            typer.echo(str(output))
+        else:
+            typer.echo(rendered, nl=False)
+    except (SpecForgeError, OSError, ValueError) as exc:
+        fail(exc)
+
+
 @app.command("rdf-check")
 def rdf_check_command(source: Path) -> None:
     """Parse a local JSON-LD/Turtle/N-Quads/TriG input and validate its RDF contract."""
     try:
         from .semantic import SemanticDataset
-        from .shacl import validate_dataset
+        from .shacl import validate_graph
 
         semantic = SemanticDataset.parse(source)
-        result = validate_dataset(semantic)
+        authoring_names = {
+            "product.trig", "package.trig", "requirements.ttl", "patterns.ttl",
+            "vocabulary.ttl", "rules.ttl", "glossary.ttl", "specforge.ttl", "shapes.ttl",
+        }
+        profile = "authoring" if source.name in authoring_names else "resolved"
+        result = validate_graph(semantic.dataset, authoring=profile == "authoring")
         typer.echo(json.dumps({
             "conforms": result.conforms,
             "content_hash": semantic.content_hash(),
+            "profile": profile,
             "quads": sum(1 for _ in semantic.dataset.quads()),
         }, sort_keys=True))
         if not result.conforms:
@@ -314,6 +350,91 @@ def rdf_check_command(source: Path) -> None:
     except typer.Exit:
         raise
     except (OSError, ValueError) as exc:
+        fail(exc)
+
+
+@app.command("rif-check")
+def rif_check_command(source: Path) -> None:
+    """Parse a local RIF Core document and validate the supported safe-Datalog profile."""
+    try:
+        from .rif import import_rules
+
+        rules = import_rules(source)
+        typer.echo(json.dumps({
+            "conforms": True,
+            "rules": len(rules),
+            "profile": "RIF Core / SpecForge safe positive Datalog",
+        }, sort_keys=True))
+    except (OSError, ValueError, SpecForgeError) as exc:
+        fail(exc)
+
+
+@app.command("lint-comments")
+def lint_comments_command(source: Path = typer.Argument(Path("."))) -> None:
+    """Check learning comments in RDF, RIF, SPARQL, and Prolog authoring files."""
+    try:
+        from .authoring import lint_comments
+
+        violations = lint_comments(source)
+        for violation in violations:
+            typer.echo(violation.render(root()), err=True)
+        if violations:
+            raise typer.Exit(1)
+        typer.echo("Learning comments: OK")
+    except typer.Exit:
+        raise
+    except OSError as exc:
+        fail(exc)
+
+
+@app.command("migrate-format")
+def migrate_format_command(
+    source: Path,
+    to: str = typer.Option("trig", "--to"),
+    output: Path = typer.Option(..., "--output"),
+) -> None:
+    """Convert a legacy YAML Product or Package into standard RDF/RIF sources."""
+    try:
+        if to != "trig":
+            raise ValueError("only --to trig is supported")
+        from .rdf_authoring import migrate_legacy_package, migrate_legacy_product
+
+        if source.is_dir():
+            paths = migrate_legacy_package(source, output)
+            report_directory = output
+        else:
+            paths = [migrate_legacy_product(source, output)]
+            report_directory = output.parent
+        from .authoring import lint_comments
+        from .rdf_authoring import (
+            load_package_manifest, load_patterns, load_product, load_requirements, load_rules,
+        )
+
+        if source.is_dir():
+            load_package_manifest(output / "package.trig")
+            if (output / "requirements.ttl").exists():
+                load_requirements(output / "requirements.ttl")
+            if (output / "patterns.ttl").exists():
+                load_patterns(output / "patterns.ttl")
+            if (output / "rules.ttl").exists():
+                load_rules(output)
+        else:
+            load_product(output)
+        violations = lint_comments(report_directory if source.is_dir() else output)
+        if violations:
+            raise ValueError("migrated output violates the learning-comment contract")
+        report = report_directory / "migration-report.json"
+        write_if_changed(report, json.dumps({
+            "status": "converted-parsed-and-comment-linted",
+            "source": str(source.resolve()),
+            "source_preserved": source.exists(),
+            "outputs": [str(path.resolve()) for path in paths],
+            "target_format": "TriG/Turtle/RIF Core",
+        }, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
+        for path in paths:
+            typer.echo(str(path))
+        typer.echo(str(report))
+    except (OSError, ValueError, SpecForgeError) as exc:
         fail(exc)
 
 

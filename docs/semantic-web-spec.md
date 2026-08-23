@@ -1,16 +1,21 @@
 # Spec: Semantic-Web-Grundlage für SpecForge
 
-Status: Accepted and implemented  
-Version: 0.3  
+Status: Superseded in its authoring-format decisions by ADR 0007
+Version: 0.3
 Datum: 2026-08-22
+
+Hinweis: Diese Spec bleibt die Grundlage für Dataset, Semantik und
+Conformance-Profil. Ihre Aussagen zur fortgesetzten YAML-Autorenschaft wurden
+durch [`standard-authoring-formats-spec.md`](standard-authoring-formats-spec.md)
+und ADR 0007 ersetzt.
 
 ## 1. Ziel
 
 SpecForge soll sein Wissensmodell nicht als proprietären Graphen neu erfinden.
 Produktwissen, Policies, Requirements, Rules, Patterns, Verifications und
-Evidence werden auf etablierte Semantic-Web-Standards abgebildet. Die heutigen
-YAML-Dateien dürfen als menschenfreundliche Autorenansicht bestehen bleiben,
-sind aber eine Projektion auf ein standardisiertes RDF-Dataset.
+Evidence werden auf etablierte Semantic-Web-Standards abgebildet. TriG,
+Turtle, RIF Core und SPARQL sind zugleich normative Quellen; eine zusätzliche
+fachliche YAML-Autorenansicht existiert nach ADR 0007 nicht mehr.
 
 Das Ergebnis muss:
 
@@ -25,7 +30,7 @@ Das Ergebnis muss:
 ## 2. Nicht-Ziele
 
 - Eine Graphdatenbank wird nicht vorausgesetzt.
-- YAML wird nicht sofort als Autorenformat entfernt.
+- Ein allgemeiner Editor für RDF und RIF ist nicht Teil dieser Grundlage.
 - OWL wird nicht als allgemeine Programmiersprache für Requirements verwendet.
 - Nicht jede Privacy- oder Security-Anforderung wird künstlich in ODRL gepresst.
 - SHACL Advanced Features und RDF 1.2 sind in Version 1 nicht normativ.
@@ -103,8 +108,8 @@ Ein Paketgraph ist unveränderlich. Eine neue Paketversion erhält eine neue IRI
 
 ### 6.1 Knowledge-Pakete
 
-Eine Paketversion ist `dcat:Dataset`. YAML, JSON-LD und Turtle sind
-`dcat:Distribution`-Darstellungen desselben Datasets. Name, Beschreibung,
+Eine Paketversion ist `dcat:Dataset`. TriG und Turtle sind normative lokale
+`dcat:Distribution`-Darstellungen; JSON-LD ist eine generierte Austauschansicht. Name, Beschreibung,
 Version und Owner verwenden nach Möglichkeit `dcterms:title`,
 `dcterms:description`, `dcat:version` und `dcterms:publisher`.
 
@@ -237,11 +242,9 @@ diagnostischen Fehler abgelehnt werden. SpecForge darf sie nicht stillschweigend
 ignorieren oder nur teilweise auswerten. Die Nutzung von OWL 2 RL bleibt bis
 zur Implementierung des entsprechenden Conformance-Profils optional.
 
-RIF Core ist der normative Austauschstandard für Rules, soweit die
-SpecForge-Teilmenge darin ausdrückbar ist. Eine kompakte Datalog-Darstellung und
-die bestehende YAML-Syntax dürfen als Autorenformate dienen. RIF-XML muss
-importiert und exportiert werden können, ist aber nicht das bevorzugte
-Autorenformat.
+RIF Core ist der normative Persistenz- und Austauschstandard für Rules, soweit
+die SpecForge-Teilmenge darin ausdrückbar ist. Eine kompakte Datalog-Darstellung
+ist eine generierte Leseansicht, keine zweite normative Quelle.
 
 ### 8.2 Relationen
 
@@ -370,11 +373,9 @@ Serialisierung, Tripelreihenfolge und Blank-Node-Namen denselben Hash.
 
 ### 10.1 Autoreneingabe
 
-Version 1 akzeptiert:
-
-- bestehendes SpecForge YAML,
-- JSON-LD 1.1,
-- Turtle für Knowledge-Pakete und Shapes.
+Version 1 akzeptiert TriG für RDF-Datasets, Turtle für einzelne Graphen und
+Shapes, RIF Core für Rules sowie SPARQL 1.1 für gespeicherte Views. JSON-LD 1.1
+und N-Quads bleiben standardisierte Austausch- beziehungsweise Hashformate.
 
 Alle Formate werden zuerst in dasselbe RDF-Dataset geparst. Semantik darf nicht
 vom Eingabeformat abhängen.
@@ -417,7 +418,7 @@ Beziehungsdefinition enthalten.
 
 - SpecForge-Vokabular und SHACL Shapes veröffentlichen.
 - Bestehende Modelle verlustfrei nach JSON-LD exportieren.
-- Roundtrip-Tests YAML → RDF → YAML-Projektion ergänzen.
+- Roundtrip-Tests für TriG, Turtle, JSON-LD und N-Quads ergänzen.
 - Bestehende Rule-DSL verlustfrei in Datalog normalisieren und Snapshot-Tests
   für die erzeugten Relationen ergänzen.
 - Alte und neue Hashes parallel ausgeben.
@@ -458,7 +459,7 @@ Eine Implementierung erfüllt diese Spec, wenn sie:
 8. die unterstützte Rule-Teilmenge als RIF Core austauschen kann,
 9. SPARQL Queries auf dem aufgelösten Dataset ausführen kann,
 10. den Dataset-Hash mittels RDFC-1.0 und SHA-256 berechnet,
-11. denselben fachlichen Inhalt aus YAML und JSON-LD identisch auflöst,
+11. semantisch isomorphe RDF-Serialisierungen mit demselben Hash auflöst,
 12. ohne Graphdatenbank lauffähig bleibt.
 
 ## 14. Akzeptanzbeispiel
@@ -495,8 +496,8 @@ SKOS-Erklärungen darstellen können.
 2. RDFLib implementiert RDF und SPARQL, pySHACL SHACL Core und `rdfcanon`
    RDFC-1.0. Die Datalog Engine bleibt hinter dem `SemanticDataset`-Interface,
    weil sie vollständige SpecForge-Provenance liefern muss.
-3. YAML bleibt das kompakte Rule-Autorenformat in Version 1; RIF Core ist das
-   Austauschformat.
+3. RIF Core ist das einzige persistierte Rule-Autorenformat; Datalog ist die
+   interne Ausführungssemantik und eine generierte Leseansicht.
 4. Version 1 unterstützt keine Negation. Rules müssen positiv formuliert sein.
 5. Term-IRIs unter `https://specforge.dev/vocab/` bleiben stabil; die erste
    Ontologie- und Shapes-Version ist `1.0.0`.

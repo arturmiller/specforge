@@ -1,0 +1,69 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix concept: <https://specforge.dev/concept/> .
+@prefix classification: <https://specforge.dev/classification/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# Dieses Scheme organisiert die menschenlesbaren Begriffe des Privacy-Pakets.
+concept:privacy-scheme a skos:ConceptScheme ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy" .
+
+# Person ist der allgemeine Privacy-Begriff für eine natürliche Person.
+concept:Person a rdfs:Class, skos:Concept ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "Person" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme concept:privacy-scheme ;
+  # Diese Aussage legt den bevorzugten sichtbaren Begriffsnamen fest.
+  skos:prefLabel "Person"@de ;
+  # Diese Aussage erklärt die Bedeutung des Glossarbegriffs.
+  skos:definition "Eine natürliche Person, auf die sich personenbezogene Daten beziehen können."@de ;
+  # Diese Aussage ordnet der Ressource eine formale Datenklassifikation zu.
+  sf:classifiedAs classification:PersonalDataSubject ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:privacy-concepts-person .
+
+# User ist eine Person und erbt deshalb die formale Privacy-Klassifikation.
+concept:User a rdfs:Class, skos:Concept ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "User" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage macht die Ressource zur formalen Unterklasse des genannten Typs.
+  rdfs:subClassOf concept:Person ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme concept:privacy-scheme ;
+  # Diese Aussage legt den bevorzugten sichtbaren Begriffsnamen fest.
+  skos:prefLabel "User"@de ;
+  # Diese Aussage erklärt die Bedeutung des Glossarbegriffs.
+  skos:definition "Eine Person, die mit einer Anwendung interagiert."@de ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:privacy-concepts-user .
+
+# Diese Quelle bezeichnet die Person-Definition der Privacy-Taxonomie.
+source:privacy-concepts-person a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_taxonomy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-concepts" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "person" .
+
+# Diese Quelle bezeichnet die User-Definition der Privacy-Taxonomie.
+source:privacy-concepts-user a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_taxonomy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-concepts" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "user" .

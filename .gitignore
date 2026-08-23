@@ -5,3 +5,4 @@ __pycache__/
 calendar.db
 generated/
 evidence/
+training-prototype/scenario.generated.js

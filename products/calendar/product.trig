@@ -1,0 +1,269 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix product: <https://specforge.dev/product/calendar/> .
+@prefix entity: <https://specforge.dev/entity/calendar/> .
+@prefix operation: <https://specforge.dev/operation/calendar/> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix package: <https://specforge.dev/package/> .
+@prefix classification: <https://specforge.dev/classification/> .
+@prefix datatype: <https://specforge.dev/datatype/> .
+@prefix action: <https://specforge.dev/action/> .
+@prefix stack: <https://specforge.dev/stack/> .
+
+# Dieser Named Graph enthält Identität und gepinnte Knowledge-Abhängigkeiten des Calendar-Produkts.
+product:graph-metadata {
+  # Das Calendar-Product verwendet den FastAPI-React-Stack und exakt versionierte Knowledge Packages.
+  product:1.0.0 a sf:Product ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "calendar" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "1.0.0" ;
+    # Diese Aussage verbindet das Product mit seinem technischen Stack.
+    sf:usesStack stack:fastapi-react ;
+    # Diese Aussage benennt eine notwendige Package-Abhängigkeit.
+    dcterms:requires
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/calendar/1.1.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/calendar-fastapi-react/1.0.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/fastapi-react/1.0.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/observability/1.1.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/platform/1.1.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/privacy/1.1.0>,
+      # Diese weitere IRI pinnt eine zusätzlich benötigte Package-Version.
+      <https://specforge.dev/package/security/1.1.0> ;
+    # Diese Aussage verbindet das Product mit einer von ihm definierten Entity.
+    sf:defines entity:User, entity:Event ;
+    # Diese Aussage verbindet das Product mit einer angebotenen Operation.
+    sf:offers operation:create_event, operation:read_event, operation:update_event, operation:delete_event ;
+    # Diese Aussage verbindet das Product mit einem direkt erklärten Requirement.
+    sf:declaresRequirement
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-PRODUCT-001,
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-PRODUCT-002,
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-PRODUCT-003,
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-PRODUCT-004,
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-OBS-001,
+      # Dieses weitere Requirement wird ebenfalls unmittelbar vom Product erklärt.
+      product:declared-PLATFORM-001 .
+}
+
+# Dieser Named Graph enthält Entities, Fields, Operationen und deklarierte Product Requirements.
+product:graph-model {
+  # User ist die handelnde Entity und besitzt genau ein UUID-Feld.
+  entity:User a sf:Entity ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "User" ;
+    # Diese Aussage ordnet der Entity eines ihrer Felder zu.
+    sf:hasField entity:User-id .
+
+  # Das id-Feld identifiziert einen User durch eine UUID.
+  entity:User-id a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "id" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:UUID .
+
+  # Event ist die Calendar-Entity mit Eigentümer, Inhalt und Zeitintervall.
+  entity:Event a sf:Entity ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "Event" ;
+    # Diese Aussage ordnet der Entity eines ihrer Felder zu.
+    sf:hasField
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-id,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-owner,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-title,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-description,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-location,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-start,
+      # Dieses weitere Field gehört ebenfalls zu der beschriebenen Entity.
+      entity:Event-end .
+
+  # Das id-Feld identifiziert ein Event durch eine UUID.
+  entity:Event-id a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "id" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:UUID .
+
+  # owner verweist auf den User mit Ownership-Beziehung und erscheint als owner_id in Responses.
+  entity:Event-owner a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "owner" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType entity:User ;
+    # Diese Aussage beschreibt die fachliche Beziehung des Feldes.
+    sf:relation "ownership" ;
+    # Diese Aussage ordnet der Ressource eine formale Datenklassifikation zu.
+    sf:classifiedAs classification:PersonalData ;
+    # Diese Aussage legt den sichtbaren Feldnamen in einer Response fest.
+    sf:responseName "owner_id" .
+
+  # title enthält den nicht klassifizierten Titel eines Events.
+  entity:Event-title a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "title" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:Text .
+
+  # description enthält personenbezogenen Freitext eines Events.
+  entity:Event-description a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "description" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:Text ;
+    # Diese Aussage ordnet der Ressource eine formale Datenklassifikation zu.
+    sf:classifiedAs classification:PersonalData .
+
+  # location enthält einen optionalen personenbezogenen Ort.
+  entity:Event-location a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "location" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:Text ;
+    # Diese Aussage ordnet der Ressource eine formale Datenklassifikation zu.
+    sf:classifiedAs classification:PersonalData ;
+    # Diese Aussage legt fest, ob das Feld fehlen darf.
+    sf:optional true .
+
+  # start enthält den verpflichtenden Beginn des Events.
+  entity:Event-start a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "start" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:DateTime .
+
+  # end enthält das verpflichtende Ende des Events.
+  entity:Event-end a sf:Field ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "end" ;
+    # Diese Aussage legt den Wertetyp des Feldes fest.
+    sf:valueType datatype:DateTime .
+
+  # create_event erstellt ein eigenes Event und liefert das erzeugte Event zurück.
+  operation:create_event a sf:Operation ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "create_event" ;
+    # Diese Aussage benennt die positive fachliche Aktion der Operation.
+    sf:action action:create ;
+    # Diese Aussage benennt die von der Operation bearbeitete Ressource.
+    sf:actsOn entity:Event ;
+    # Diese Aussage benennt die von der Operation zurückgegebene Ressource.
+    sf:returns entity:Event ;
+    # Diese Aussage benennt die handelnde Entity der Operation.
+    sf:actor entity:User ;
+    # Diese Aussage begrenzt den fachlichen Geltungsbereich der Operation.
+    sf:scope "own" .
+
+  # read_event liest ein eigenes Event und liefert das Event zurück.
+  operation:read_event a sf:Operation ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "read_event" ;
+    # Diese Aussage benennt die positive fachliche Aktion der Operation.
+    sf:action action:read ;
+    # Diese Aussage benennt die von der Operation bearbeitete Ressource.
+    sf:actsOn entity:Event ;
+    # Diese Aussage benennt die von der Operation zurückgegebene Ressource.
+    sf:returns entity:Event ;
+    # Diese Aussage benennt die handelnde Entity der Operation.
+    sf:actor entity:User ;
+    # Diese Aussage begrenzt den fachlichen Geltungsbereich der Operation.
+    sf:scope "own" .
+
+  # update_event ändert ein eigenes Event und liefert das geänderte Event zurück.
+  operation:update_event a sf:Operation ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "update_event" ;
+    # Diese Aussage benennt die positive fachliche Aktion der Operation.
+    sf:action action:update ;
+    # Diese Aussage benennt die von der Operation bearbeitete Ressource.
+    sf:actsOn entity:Event ;
+    # Diese Aussage benennt die von der Operation zurückgegebene Ressource.
+    sf:returns entity:Event ;
+    # Diese Aussage benennt die handelnde Entity der Operation.
+    sf:actor entity:User ;
+    # Diese Aussage begrenzt den fachlichen Geltungsbereich der Operation.
+    sf:scope "own" .
+
+  # delete_event löscht ein eigenes Event und liefert deshalb keine Event-Repräsentation zurück.
+  operation:delete_event a sf:Operation ;
+    # Diese Aussage legt die stabile Kennung der Ressource fest.
+    dcterms:identifier "delete_event" ;
+    # Diese Aussage benennt die positive fachliche Aktion der Operation.
+    sf:action action:delete ;
+    # Diese Aussage benennt die von der Operation bearbeitete Ressource.
+    sf:actsOn entity:Event ;
+    # Diese Aussage benennt die handelnde Entity der Operation.
+    sf:actor entity:User ;
+    # Diese Aussage begrenzt den fachlichen Geltungsbereich der Operation.
+    sf:scope "own" .
+
+  # PRODUCT-001 wird unmittelbar für create_event deklariert.
+  product:declared-PRODUCT-001 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:PRODUCT-001 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:create_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "A user can create an event."@en .
+
+  # PRODUCT-002 wird unmittelbar für read_event deklariert.
+  product:declared-PRODUCT-002 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:PRODUCT-002 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:read_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "A user can read an owned event."@en .
+
+  # PRODUCT-003 wird unmittelbar für update_event deklariert.
+  product:declared-PRODUCT-003 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:PRODUCT-003 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:update_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "A user can update an owned event."@en .
+
+  # PRODUCT-004 wird unmittelbar für delete_event deklariert.
+  product:declared-PRODUCT-004 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:PRODUCT-004 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:delete_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "A user can delete an owned event."@en .
+
+  # OBS-001 wird unmittelbar für read_event deklariert.
+  product:declared-OBS-001 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:OBS-001 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:read_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "Event access is audited."@en .
+
+  # PLATFORM-001 wird unmittelbar für read_event deklariert.
+  product:declared-PLATFORM-001 a sf:DeclaredRequirement ;
+    # Diese Aussage verweist auf die allgemeine Requirement Definition.
+    sf:requirement requirement:PLATFORM-001 ;
+    # Diese Aussage benennt das konkrete Target des Requirements.
+    sf:appliesTo operation:read_event ;
+    # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+    dcterms:description "Event reads are rate limited."@en .
+}

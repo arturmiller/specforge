@@ -1,3 +1,0 @@
-Event: Eine fachliche Entität des Calendar-Produkts mit Feldern wie Titel, Beginn, Ende und Eigentümer.
-User: Eine Person, die Calendar verwendet und eigene Events erstellen, lesen, ändern und löschen kann.
-PersonalData: Eine Klassifikation für Daten, die sich auf eine Person beziehen und deshalb besondere Schutzmaßnahmen auslösen.

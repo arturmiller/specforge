@@ -1,0 +1,17 @@
+# Liefert alle Glossarbegriffe mit Definition und dem Namen ihres Begriffsschemas.
+SELECT ?label ?definition ?schemeName WHERE {
+  # Ein Glossarbegriff gehört zu einem SKOS-Schema und besitzt Label sowie Definition.
+  GRAPH ?graph {
+    # Nur Ressourcen vom standardisierten Typ SKOS Concept sind Glossarbegriffe.
+    ?term a skos:Concept .
+    # Das Begriffsschema gruppiert fachlich zusammengehörige Begriffe.
+    ?term skos:inScheme ?scheme .
+    # Dieses Label ist der im Explorer sichtbare Name.
+    ?term skos:prefLabel ?label .
+    # Diese Definition erscheint beim Überfahren des Begriffs.
+    ?term skos:definition ?definition .
+    # Die Kennung benennt das zugehörige Begriffsschema.
+    ?scheme dcterms:identifier ?schemeName .
+  }
+}
+ORDER BY ?label

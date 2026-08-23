@@ -1,7 +1,0 @@
-id: PRODUCT-001
-version: "1.0.0"
-statement: A user can create an event.
-expectation: {control: event_create, operator: equals, value: enabled}
-verifications:
-  - {id: TEST-PRODUCT-001, adapter: http_request, setup: owner_create, assertion: {response_status: 201, stored_matches: true}}
-source: {type: product_spec, document: calendar-product, version: "1.0.0", section: create}

@@ -1,4 +1,0 @@
-name: observability
-version: "1.1.0"
-kind: policy
-purpose: Defines app-independent observability expectations.

@@ -1,0 +1,34 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix pattern: <https://specforge.dev/pattern/> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix stack: <https://specforge.dev/stack/> .
+@prefix binding: <https://specforge.dev/control-binding/> .
+@prefix constraint: <https://specforge.dev/constraint/> .
+
+# Dieses Pattern beschreibt die technische Umsetzung fastapi/read-rate-limit.
+pattern:fastapi-read-rate-limit a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/read-rate-limit" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "2.0.0" ;
+  # Diese Aussage benennt das verantwortliche Team oder den Herausgeber.
+  dcterms:publisher "platform-team" ;
+  # Diese Aussage verbindet das Product mit seinem technischen Stack.
+  sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:PLATFORM-001 ;
+  # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+  sf:controlBinding binding:fastapi-read-rate-limit-rate_limit ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-PLATFORM-001 ;
+  # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+  sf:artifact "backend/app.py" .
+
+# Dieses Binding verlangt für rate_limit den vom Requirement erwarteten Wert.
+binding:fastapi-read-rate-limit-rate_limit a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/rate_limit> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "60"^^<http://www.w3.org/2001/XMLSchema#integer> .

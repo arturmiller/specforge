@@ -30,7 +30,6 @@ from .model import (
 BASE = "https://specforge.dev/"
 SF = Namespace(f"{BASE}vocab/")
 VOCABULARY_IRI = URIRef(f"{BASE}vocab/1.0.0")
-DCAT_VERSION = URIRef(f"{DCAT}version")
 
 GRAPH_NAMES = {
     "product": URIRef(f"{BASE}graph/product"),
@@ -58,28 +57,44 @@ CONTEXT: dict[str, Any] = {
 }
 
 
+RELATION_PREDICATES = {
+    "depends_on": DCTERMS.requires, "binds_domain": SF.bindsDomain,
+    "binds_implementation": SF.bindsImplementation, "defines": SF.defines,
+    "has_field": SF.hasField, "classified_as": SF.classifiedAs,
+    "is_a": RDFS.subClassOf, "offers": SF.offers, "acts_on": SF.actsOn,
+    "returns": SF.returns, "actor": SF.actorType, "derives": SF.derives,
+    "supports": PROV.wasDerivedFrom, "instantiated_as": SF.instantiatedAs,
+    "applies_to": SF.appliesTo, "matches": SF.matches,
+    "implemented_by": SF.implementedBy, "verified_by": SF.verifiedBy,
+    "provides": SF.provides, "touches": SF.touches, "contains": DCTERMS.hasPart,
+}
+
+
+def published_vocabulary() -> Graph:
+    """Load the versioned public vocabulary shipped with source and wheels."""
+    repository_copy = Path(__file__).parents[2] / "vocabulary" / "1.0.0" / "specforge.ttl"
+    bundled_copy = Path(__file__).with_name("vocabulary") / "1.0.0" / "specforge.ttl"
+    source = repository_copy if repository_copy.exists() else bundled_copy
+    if not source.exists():
+        raise FileNotFoundError("published SpecForge vocabulary is missing")
+    return Graph().parse(source, format="turtle")
+
+
+def _localized(graph: Graph, subject: URIRef, predicate: URIRef, language: str) -> str:
+    values = [value for value in graph.objects(subject, predicate) if getattr(value, "language", None) == language]
+    if len(values) != 1:
+        raise ValueError(f"published vocabulary needs exactly one {language} {predicate} for {subject}")
+    return str(values[0])
+
+
+_PUBLIC_VOCABULARY = published_vocabulary()
 RELATION_DEFINITIONS = {
-    "depends_on": (DCTERMS.requires, "verwendet Knowledge-Paket", "Das Produkt lädt dieses Knowledge-Paket in der angegebenen Version."),
-    "binds_domain": (SF.bindsDomain, "verbindet Domäne", "Das Integrationspaket verbindet Patterns mit dieser fachlichen Domäne."),
-    "binds_implementation": (SF.bindsImplementation, "verbindet Implementierung", "Das Integrationspaket verwendet diesen technischen Stack."),
-    "defines": (SF.defines, "definiert", "Das Produkt definiert diese fachliche Entität."),
-    "has_field": (SF.hasField, "besitzt Feld", "Die Entität besitzt dieses deklarierte Feld."),
-    "classified_as": (SF.classifiedAs, "klassifiziert als", "Das Element trägt diese fachliche oder schutzbezogene Klassifikation."),
-    "is_a": (RDFS.subClassOf, "ist Unterklasse von", "Der Typ ist eine formale Spezialisierung des verbundenen Obertyps."),
-    "offers": (SF.offers, "bietet an", "Das Produkt stellt diese ausführbare Operation bereit."),
-    "acts_on": (SF.actsOn, "bearbeitet", "Die Operation bearbeitet diese Ressource."),
-    "returns": (SF.returns, "liefert", "Die Operation gibt eine Repräsentation dieser Entität zurück."),
-    "actor": (SF.actorType, "Akteurstyp", "Diese Entität führt die Operation aus."),
-    "derives": (SF.derives, "leitet ab", "Die Rule leitet diese Requirement-Instanz her."),
-    "supports": (PROV.wasDerivedFrom, "stützt", "Diese Assertion ist eine Prämisse für die abgeleitete Assertion."),
-    "instantiated_as": (SF.instantiatedAs, "instanziiert als", "Aus der allgemeinen Requirement Definition entsteht diese konkrete Instanz."),
-    "applies_to": (SF.appliesTo, "gilt für", "Die Requirement-Instanz gilt für diese konkrete Operation."),
-    "matches": (SF.matches, "erfüllt Bedingung", "Diese Assertion erfüllt eine Bedingung der Rule."),
-    "implemented_by": (SF.implementedBy, "umgesetzt durch", "Dieses Pattern beschreibt die vorgesehene Umsetzung des Requirements."),
-    "verified_by": (SF.verifiedBy, "verifiziert durch", "Diese Verification prüft die Requirement-Instanz ausführbar."),
-    "provides": (SF.provides, "stellt bereit", "Das Pattern stellt diese Verification bereit."),
-    "touches": (SF.touches, "betrifft", "Die Umsetzung des Patterns verändert oder erzeugt dieses Artefakt."),
-    "contains": (DCTERMS.hasPart, "enthält", "Das Knowledge-Paket enthält diese Definition."),
+    key: (
+        predicate,
+        _localized(_PUBLIC_VOCABULARY, predicate, RDFS.label, "en"),
+        _localized(_PUBLIC_VOCABULARY, predicate, RDFS.comment, "de"),
+    )
+    for key, predicate in RELATION_PREDICATES.items()
 }
 
 
@@ -180,35 +195,8 @@ class SemanticDataset:
 
     def _add_vocabulary(self) -> None:
         graph = self.graph("vocabulary")
-        graph.add((VOCABULARY_IRI, RDF.type, OWL.Ontology))
-        graph.add((VOCABULARY_IRI, OWL.versionInfo, Literal("1.0.0")))
-        classes = {
-            "Product": "Product",
-            "Entity": "Entity",
-            "Operation": "Operation",
-            "DatalogRule": "Datalog Rule",
-            "PositiveAtom": "Positives Atom",
-            "Equality": "Gleichheit",
-            "RequirementDefinition": "Requirement Definition",
-            "RequirementInstance": "Requirement Instance",
-            "Rule": "Rule",
-            "ImplementationPattern": "Implementation Pattern",
-            "Verification": "Verification",
-            "Assertion": "Assertion",
-            "PolicyPackage": "Policy-Paket",
-            "DomainPackage": "Domänenpaket",
-            "IntegrationPackage": "Integrationspaket",
-            "ImplementationPackage": "Implementierungspaket",
-        }
-        for local, label in classes.items():
-            graph.add((SF[local], RDF.type, RDFS.Class))
-            graph.add((SF[local], RDFS.label, Literal(label, lang="de")))
-        for _, (predicate, label, definition) in RELATION_DEFINITIONS.items():
-            graph.add((predicate, RDF.type, RDF.Property))
-            graph.add((predicate, RDFS.label, Literal(label, lang="de")))
-            graph.add((predicate, RDFS.comment, Literal(definition, lang="de")))
-        graph.add((SF.bindsDomain, RDFS.subPropertyOf, DCTERMS.relation))
-        graph.add((SF.bindsImplementation, RDFS.subPropertyOf, DCTERMS.relation))
+        for triple in _PUBLIC_VOCABULARY:
+            graph.add(triple)
 
     def add_source_models(
         self,
@@ -218,14 +206,20 @@ class SemanticDataset:
         requirements: Iterable[RequirementDefinition],
         rules: Iterable[Rule],
         patterns: Iterable[Pattern],
+        package_files: dict[str, list[tuple[str, str]]] | None = None,
     ) -> None:
         graph = self.graph("product")
         product = self.iris.product(spec.product.id, spec.product.version)
         graph.add((product, RDF.type, SF.Product))
         graph.add((product, RDF.type, PROV.Entity))
+        product_source = URIRef(f"{product}/distribution/product.trig")
+        graph.add((product_source, RDF.type, DCAT.Distribution))
+        graph.add((product_source, DCTERMS.identifier, Literal("product.trig")))
+        graph.add((product_source, DCAT.mediaType, Literal("application/trig")))
+        graph.add((product, PROV.wasDerivedFrom, product_source))
         graph.add((product, DCTERMS.identifier, Literal(spec.product.id)))
-        graph.add((product, DCAT_VERSION, Literal(spec.product.version)))
-        graph.add((product, SF.stack, Literal(spec.product.stack)))
+        graph.add((product, DCTERMS.hasVersion, Literal(spec.product.version)))
+        graph.add((product, SF.usesStack, URIRef(f"{BASE}stack/{_segment(spec.product.stack)}")))
 
         entities = {entity.id for entity in spec.entities}
         self._entity_ids = entities
@@ -262,7 +256,7 @@ class SemanticDataset:
             operation_iri = self.iris.operation(spec.product.id, operation.id)
             graph.add((operation_iri, RDF.type, SF.Operation))
             graph.add((operation_iri, DCTERMS.identifier, Literal(operation.id)))
-            graph.add((operation_iri, SF.action, Literal(operation.action)))
+            graph.add((operation_iri, SF.action, URIRef(f"{BASE}action/{_segment(operation.action)}")))
             graph.add((operation_iri, SF.actsOn, self.iris.entity(spec.product.id, operation.acts_on)))
             if operation.returns:
                 graph.add((operation_iri, SF.returns, self.iris.entity(spec.product.id, operation.returns)))
@@ -278,19 +272,16 @@ class SemanticDataset:
             if manifest.kind:
                 package_graph.add((package, RDF.type, SF[f"{manifest.kind.title()}Package"]))
             package_graph.add((package, DCTERMS.title, Literal(name)))
-            package_graph.add((package, DCAT_VERSION, Literal(version)))
+            package_graph.add((package, DCTERMS.hasVersion, Literal(version)))
             if manifest.owner:
                 package_graph.add((package, DCTERMS.publisher, Literal(manifest.owner)))
             if manifest.purpose:
                 package_graph.add((package, DCTERMS.description, Literal(manifest.purpose)))
-            for media_type, suffix in (
-                ("application/yaml", "yaml"),
-                ("application/ld+json", "jsonld"),
-                ("text/turtle", "turtle"),
-            ):
-                distribution = URIRef(f"{package}/distribution/{suffix}")
+            for filename, media_type in (package_files or {}).get(name, []):
+                distribution = URIRef(f"{package}/distribution/{_segment(filename)}")
                 package_graph.add((package, DCAT.distribution, distribution))
                 package_graph.add((distribution, RDF.type, DCAT.Distribution))
+                package_graph.add((distribution, DCTERMS.identifier, Literal(filename)))
                 package_graph.add((distribution, DCAT.mediaType, Literal(media_type)))
             graph.add((product, DCTERMS.requires, package))
             if manifest.integrates:
@@ -310,6 +301,7 @@ class SemanticDataset:
             package_graph.add((self._package_for_graph(package_graph), DCTERMS.hasPart, concept_iri))
             package_graph.add((concept_iri, RDFS.label, Literal(concept.id)))
             package_graph.add((concept_iri, DCTERMS.source, Literal(f"{concept.source.document}#{concept.source.section}")))
+            package_graph.add((concept_iri, PROV.wasDerivedFrom, self._distribution_for(package_graph, "vocabulary.ttl")))
             for parent in concept.is_a:
                 package_graph.add((concept_iri, RDFS.subClassOf, self.iris.concept(parent, concept_versions[parent])))
             for classification in concept.classifications:
@@ -322,12 +314,25 @@ class SemanticDataset:
             package_graph.add((self._package_for_graph(package_graph), DCTERMS.hasPart, requirement_iri))
             package_graph.add((requirement_iri, DCTERMS.identifier, Literal(requirement.id)))
             package_graph.add((requirement_iri, DCTERMS.description, Literal(requirement.statement)))
-            package_graph.add((requirement_iri, SF.control, Literal(requirement.expectation.control)))
-            package_graph.add((requirement_iri, SF.expectedValue, Literal(requirement.expectation.value)))
+            package_graph.add((requirement_iri, SF.control, URIRef(f"{BASE}control/{_segment(requirement.expectation.control)}")))
+            package_graph.add((requirement_iri, SF.operator, URIRef(f"{BASE}operator/{_segment(requirement.expectation.operator)}")))
+            expected = requirement.expectation.value
+            if isinstance(expected, list):
+                head = URIRef(f"{requirement_iri}/expected-values/0") if expected else RDF.nil
+                package_graph.add((requirement_iri, SF.expectedValueList, head))
+                for index, value in enumerate(expected):
+                    item = URIRef(f"{requirement_iri}/expected-values/{index}")
+                    rest = URIRef(f"{requirement_iri}/expected-values/{index + 1}") if index + 1 < len(expected) else RDF.nil
+                    package_graph.add((item, RDF.first, Literal(value)))
+                    package_graph.add((item, RDF.rest, rest))
+            else:
+                package_graph.add((requirement_iri, SF.expectedValue, Literal(expected)))
+            package_graph.add((requirement_iri, PROV.wasDerivedFrom, self._distribution_for(package_graph, "requirements.ttl")))
             for verification in requirement.verifications:
                 verification_iri = self.iris.verification(verification.id)
                 package_graph.add((verification_iri, RDF.type, SF.Verification))
-                package_graph.add((verification_iri, SF.adapter, Literal(verification.adapter)))
+                package_graph.add((verification_iri, SF.verificationAdapter, URIRef(f"{BASE}verification-adapter/{_segment(verification.adapter)}")))
+                package_graph.add((verification_iri, PROV.wasDerivedFrom, self._distribution_for(package_graph, "requirements.ttl")))
                 package_graph.add((requirement_iri, SF.verifiedBy, verification_iri))
 
         for rule in rules:
@@ -337,6 +342,7 @@ class SemanticDataset:
             package_graph.add((self._package_for_graph(package_graph), DCTERMS.hasPart, rule_iri))
             package_graph.add((rule_iri, DCTERMS.identifier, Literal(rule.id)))
             package_graph.add((rule_iri, SF.derives, self.iris.requirement(rule.then.requirement)))
+            package_graph.add((rule_iri, PROV.wasDerivedFrom, self._distribution_for(package_graph, "rules.rif.xml")))
 
         for compiled in compile_requirement_rules(rules):
             source_id = compiled.source_id or compiled.id
@@ -368,8 +374,9 @@ class SemanticDataset:
             package_graph.add((pattern_iri, RDF.type, SF.ImplementationPattern))
             package_graph.add((self._package_for_graph(package_graph), DCTERMS.hasPart, pattern_iri))
             package_graph.add((pattern_iri, DCTERMS.identifier, Literal(pattern.id)))
+            package_graph.add((pattern_iri, PROV.wasDerivedFrom, self._distribution_for(package_graph, "patterns.ttl")))
             if pattern.stack:
-                package_graph.add((pattern_iri, SF.stack, Literal(pattern.stack)))
+                package_graph.add((pattern_iri, SF.usesStack, URIRef(f"{BASE}stack/{_segment(pattern.stack)}")))
             for requirement_id in pattern.satisfies:
                 package_graph.add((pattern_iri, SF.satisfies, self.iris.requirement(requirement_id)))
             for verification in pattern.verifications:
@@ -402,6 +409,11 @@ class SemanticDataset:
             return URIRef(value.replace("/graph/package/", "/package/", 1))
         return VOCABULARY_IRI
 
+    @classmethod
+    def _distribution_for(cls, graph: Graph, filename: str) -> URIRef:
+        package = cls._package_for_graph(graph)
+        return URIRef(f"{package}/distribution/{_segment(filename)}")
+
     def _pattern_graph(self, pattern: Pattern, manifests: dict[str, PackageManifest]) -> Graph:
         for name, manifest in manifests.items():
             if pattern.id.startswith(name.split("-")[0] + "/"):
@@ -423,6 +435,8 @@ class SemanticDataset:
         provenance.add((run, RDF.type, PROV.Activity))
         provenance.add((run, PROV.wasAssociatedWith, SF.compiler))
         provenance.add((SF.compiler, RDF.type, PROV.SoftwareAgent))
+        for distribution, _, _, _ in self.dataset.quads((None, RDF.type, DCAT.Distribution, None)):
+            provenance.add((run, PROV.used, distribution))
 
         assertions: dict[str, URIRef] = {}
         for fact in resolved.facts:
@@ -462,8 +476,18 @@ class SemanticDataset:
             resolved_graph.add((instance_iri, DCTERMS.identifier, Literal(instance.id)))
             resolved_graph.add((definition, SF.instantiatedAs, instance_iri))
             resolved_graph.add((instance_iri, SF.appliesTo, target))
-            resolved_graph.add((instance_iri, SF.control, Literal(instance.expectation.control)))
-            resolved_graph.add((instance_iri, SF.expectedValue, Literal(instance.expectation.value)))
+            resolved_graph.add((instance_iri, SF.control, URIRef(f"{BASE}control/{_segment(instance.expectation.control)}")))
+            expected = instance.expectation.value
+            if isinstance(expected, list):
+                head = URIRef(f"{instance_iri}/expected-values/0") if expected else RDF.nil
+                resolved_graph.add((instance_iri, SF.expectedValueList, head))
+                for value_index, value in enumerate(expected):
+                    item = URIRef(f"{instance_iri}/expected-values/{value_index}")
+                    rest = URIRef(f"{instance_iri}/expected-values/{value_index + 1}") if value_index + 1 < len(expected) else RDF.nil
+                    resolved_graph.add((item, RDF.first, Literal(value)))
+                    resolved_graph.add((item, RDF.rest, rest))
+            else:
+                resolved_graph.add((instance_iri, SF.expectedValue, Literal(expected)))
             if instance.pattern:
                 pattern = next(
                     (subject for subject, _, _, _ in self.dataset.quads(
@@ -557,7 +581,7 @@ class SemanticDataset:
         return RDFCanon(
             "sha256",
             self.dataset if include_runtime else self._copy_for_hash(),
-            RDFCanonTimeTicker(max_time=60),
+            RDFCanonTimeTicker(max_time=60_000),
         ).canonize()
 
     def content_hash(self) -> str:

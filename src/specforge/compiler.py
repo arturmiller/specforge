@@ -4,11 +4,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from pydantic import ValidationError
-
 from .errors import SpecForgeError
 from .datalog import evaluate as evaluate_datalog
-from .io import canonical_json, content_hash, directory_hash, pretty_json, read_yaml, write_if_changed
+from .io import canonical_json, content_hash, pretty_json, write_if_changed
 from .model import (
     Concept, Condition, Derivation, Fact, FactOrigin, KnowledgeVersions, PackageManifest, Pattern,
     ProductSpec, RequirementDefinition, RequirementInstance, RequirementStatus,
@@ -29,18 +27,19 @@ class Compiler:
         if not path.is_absolute():
             path = self.root / path
         if path.is_dir():
-            path /= "product.yaml"
+            path /= "product.trig"
         return path
 
-    def load_model(self, path: Path, model: type[Any]) -> Any:
-        try:
-            return model.model_validate(read_yaml(path))
-        except (ValidationError, ValueError) as exc:
-            raise SpecForgeError("SF1001", str(path.relative_to(self.root)), "/", str(exc)) from exc
+    def load_product_spec(self, path: Path) -> ProductSpec:
+        if path.suffix != ".trig":
+            raise SpecForgeError("SF3302", str(path), "/", "Product authoring format must be TriG")
+        from .rdf_authoring import load_product
+
+        return load_product(path)
 
     def load_inputs(self, product: str | Path):
         product_path = self.product_file(product)
-        spec = self.load_model(product_path, ProductSpec)
+        spec = self.load_product_spec(product_path)
         self._load_package_manifests(spec, product_path)
         concepts: list[Concept] = []
         requirements: dict[str, RequirementDefinition] = {}
@@ -51,18 +50,33 @@ class Compiler:
             package = self.root / "knowledge" / namespace / version
             if not package.is_dir():
                 raise SpecForgeError("SF1004", str(product_path.relative_to(self.root)), "/knowledge_dependencies", f"missing {namespace}@{version}")
-            packages[namespace] = {"version": version, "hash": directory_hash(package)}
-            for path in sorted(package.glob("concepts/*.yaml")):
-                concepts.append(self.load_model(path, Concept))
-            for path in sorted(package.glob("requirements/*.yaml")):
-                requirement = self.load_model(path, RequirementDefinition)
+            from .rdf_authoring import package_content_hash
+
+            packages[namespace] = {"version": version, "hash": package_content_hash(package)}
+            rdf_concepts = package / "vocabulary.ttl"
+            if rdf_concepts.exists():
+                from .rdf_authoring import load_concepts
+
+                concepts.extend(load_concepts(rdf_concepts))
+            rdf_requirements = package / "requirements.ttl"
+            requirement_items = []
+            if rdf_requirements.exists():
+                from .rdf_authoring import load_requirements
+
+                requirement_items = load_requirements(rdf_requirements)
+            for requirement in requirement_items:
                 if requirement.id in requirements:
-                    raise SpecForgeError("SF1002", str(path.relative_to(self.root)), "/id", f"duplicate requirement {requirement.id}")
+                    raise SpecForgeError("SF1002", str(package.relative_to(self.root)), "/id", f"duplicate requirement {requirement.id}")
                 requirements[requirement.id] = requirement
-            for path in sorted(package.glob("rules/*.yaml")):
-                rules.append(self.load_model(path, Rule))
-            for path in sorted(package.glob("patterns/*.yaml")):
-                patterns.append(self.load_model(path, Pattern))
+            if (package / "rules.ttl").exists() and (package / "rules.rif.xml").exists():
+                from .rdf_authoring import load_rules
+
+                rules.extend(load_rules(package))
+            rdf_patterns = package / "patterns.ttl"
+            if rdf_patterns.exists():
+                from .rdf_authoring import load_patterns
+
+                patterns.extend(load_patterns(rdf_patterns))
         for declared in spec.declared_requirements:
             if declared.id not in requirements:
                 raise SpecForgeError("SF1003", str(product_path.relative_to(self.root)), "/declared_requirements", f"missing definition {declared.id}")
@@ -84,7 +98,7 @@ class Compiler:
 
     def load_package_manifests(self, product: str | Path) -> dict[str, PackageManifest]:
         product_path = self.product_file(product)
-        spec = self.load_model(product_path, ProductSpec)
+        spec = self.load_product_spec(product_path)
         return self._load_package_manifests(spec, product_path)
 
     def _load_package_manifests(
@@ -98,8 +112,10 @@ class Compiler:
                     "SF1004", str(product_path.relative_to(self.root)),
                     "/knowledge_dependencies", f"missing {namespace}@{version}",
                 )
-            manifest_path = package / "package.yaml"
-            manifest = self.load_model(manifest_path, PackageManifest)
+            manifest_path = package / "package.trig"
+            from .rdf_authoring import load_package_manifest
+
+            manifest = load_package_manifest(manifest_path)
             if manifest.name != namespace or manifest.version != version:
                 raise SpecForgeError(
                     "SF1005", str(manifest_path.relative_to(self.root)), "/",
@@ -116,7 +132,7 @@ class Compiler:
                 active_version = spec.knowledge_dependencies.get(reference.package)
                 if active_version != reference.version:
                     raise SpecForgeError(
-                        "SF1006", f"knowledge/{namespace}/{manifest.version}/package.yaml",
+                    "SF1006", f"knowledge/{namespace}/{manifest.version}/{manifest_path.name}",
                         f"/integrates/{role}",
                         f"requires active dependency {reference.package}@{reference.version}",
                     )
@@ -150,18 +166,18 @@ class Compiler:
             key = (subject, predicate, canonical_json(obj))
             facts[key] = Fact(id=self.fact_id(subject, predicate, obj), subject=subject, predicate=predicate, object=obj, origin=origin, provenance=provenance)
         for entity in sorted(spec.entities, key=lambda x: x.id):
-            add(entity.id, "is_entity", True, f"product.yaml#/entities/{entity.id}")
+            add(entity.id, "is_entity", True, f"product.trig#/entities/{entity.id}")
             for field in sorted(entity.fields, key=lambda x: x.name):
                 field_id = f"{entity.id}.{field.name}"
-                add(entity.id, "has_field", field_id, f"product.yaml#/entities/{entity.id}/fields/{field.name}")
-                add(field_id, "has_type", field.type, f"product.yaml#/entities/{entity.id}/fields/{field.name}/type")
+                add(entity.id, "has_field", field_id, f"product.trig#/entities/{entity.id}/fields/{field.name}")
+                add(field_id, "has_type", field.type, f"product.trig#/entities/{entity.id}/fields/{field.name}/type")
                 if field.classification:
-                    add(field_id, "classified_as", field.classification, f"product.yaml#/entities/{entity.id}/fields/{field.name}/classification")
+                    add(field_id, "classified_as", field.classification, f"product.trig#/entities/{entity.id}/fields/{field.name}/classification")
                 if field.relation:
-                    add(field_id, "relation", field.relation, f"product.yaml#/entities/{entity.id}/fields/{field.name}/relation")
+                    add(field_id, "relation", field.relation, f"product.trig#/entities/{entity.id}/fields/{field.name}/relation")
         for op in sorted(spec.operations, key=lambda x: x.id):
             prefix = f"operation.{op.id}"
-            provenance = f"product.yaml#/operations/{op.id}"
+            provenance = f"product.trig#/operations/{op.id}"
             add(prefix, "action", op.action, provenance)
             add(prefix, "acts_on", op.acts_on, provenance)
             if op.returns is not None:
@@ -169,79 +185,6 @@ class Compiler:
             add(prefix, "actor", op.actor, provenance)
             add(prefix, "scope", op.scope, provenance)
         return sorted(facts.values(), key=lambda f: (f.subject, f.predicate, str(f.object)))
-
-    def enrich(self, facts: list[Fact], concepts: list[Concept]) -> list[Fact]:
-        by_key = {(f.subject, f.predicate, canonical_json(f.object)): f for f in facts}
-        def add(subject: str, predicate: str, obj: Any, premises: list[Fact], derivation: str, provenance: str) -> bool:
-            key = (subject, predicate, canonical_json(obj))
-            if key in by_key:
-                return False
-            by_key[key] = Fact(id=self.fact_id(subject, predicate, obj), subject=subject, predicate=predicate, object=obj, origin=FactOrigin.ONTOLOGY_DERIVED, premises=sorted(f.id for f in premises), derivation=derivation, provenance=provenance)
-            return True
-        for concept in concepts:
-            for parent in concept.is_a:
-                add(concept.id, "is_a", parent, [], "concept-declaration", f"{concept.source.document}@{concept.version}")
-            for classification in concept.classifications:
-                add(concept.id, "classified_as", classification, [], "concept-declaration", f"{concept.source.document}@{concept.version}")
-        changed = True
-        while changed:
-            changed = False
-            current = list(by_key.values())
-            is_a = [f for f in current if f.predicate == "is_a"]
-            classified = [f for f in current if f.predicate == "classified_as"]
-            types = [f for f in current if f.predicate == "has_type"]
-            fields = [f for f in current if f.predicate == "has_field"]
-            for left in is_a:
-                for right in is_a:
-                    if left.object == right.subject:
-                        changed |= add(left.subject, "is_a", right.object, [left, right], "transitive-is-a", "semantic-closure")
-                for cls in classified:
-                    if left.object == cls.subject:
-                        changed |= add(left.subject, "classified_as", cls.object, [left, cls], "classification-inheritance", "semantic-closure")
-            for typed in types:
-                for cls in classified:
-                    if typed.object == cls.subject:
-                        changed |= add(typed.subject, "classified_as", cls.object, [typed, cls], "type-classification", "semantic-closure")
-            current_classified = [f for f in by_key.values() if f.predicate == "classified_as"]
-            for field in fields:
-                for cls in current_classified:
-                    if field.object == cls.subject:
-                        changed |= add(field.subject, "contains_classification", cls.object, [field, cls], "field-classification-propagation", "semantic-closure")
-        return sorted(by_key.values(), key=lambda f: (f.subject, f.predicate, str(f.object)))
-
-    def match(self, condition: Condition, facts: list[Fact], bindings: dict[str, Any]) -> list[tuple[dict[str, Any], list[Fact]]]:
-        if condition.fact:
-            results = []
-            for fact in facts:
-                candidate = dict(bindings)
-                if self._match_value(condition.fact.subject, fact.subject, candidate) and self._match_value(condition.fact.predicate, fact.predicate, candidate) and self._match_value(condition.fact.object, fact.object, candidate):
-                    results.append((candidate, [fact]))
-            return results
-        if condition.equals:
-            left, right = condition.equals
-            left = bindings.get(left[1:], left) if isinstance(left, str) and left.startswith("$") else left
-            right = bindings.get(right[1:], right) if isinstance(right, str) and right.startswith("$") else right
-            return [(dict(bindings), [])] if left == right else []
-        if condition.all is not None:
-            states = [(dict(bindings), [])]
-            for child in condition.all:
-                states = [(new_b, used + new_f) for old_b, used in states for new_b, new_f in self.match(child, facts, old_b)]
-            return states
-        if condition.any is not None:
-            return [item for child in condition.any for item in self.match(child, facts, dict(bindings))]
-        if condition.not_ is not None:
-            return [] if self.match(condition.not_, facts, dict(bindings)) else [(dict(bindings), [])]
-        return []
-
-    @staticmethod
-    def _match_value(pattern: Any, actual: Any, bindings: dict[str, Any]) -> bool:
-        if isinstance(pattern, str) and pattern.startswith("$"):
-            key = pattern[1:]
-            if key in bindings:
-                return bindings[key] == actual
-            bindings[key] = actual
-            return True
-        return pattern == actual
 
     def resolve(self, product: str | Path, write: bool = True) -> ResolvedSpec:
         spec, concepts, definitions, rules, patterns, packages = self.load_inputs(product)
@@ -324,8 +267,21 @@ class Compiler:
             exclude={"content_hash", "legacy_content_hash", "conforms_to", "hash_algorithm"},
         ))
         semantic = SemanticDataset()
+        media_types = {
+            ".ttl": "text/turtle", ".trig": "application/trig",
+            ".rq": "application/sparql-query", ".rif.xml": "application/rif+xml",
+        }
+        package_files = {
+            name: [
+                (path.name, next(media for suffix, media in media_types.items() if path.name.endswith(suffix)))
+                for path in sorted((self.root / "knowledge" / name / manifest.version).iterdir())
+                if path.is_file() and path.name != "package.trig" and path.name.endswith(tuple(media_types))
+            ]
+            for name, manifest in manifests.items()
+        }
         semantic.add_source_models(
-            spec, manifests, concepts, definitions.values(), rules, patterns
+            spec, manifests, concepts, definitions.values(), rules, patterns,
+            package_files=package_files,
         )
         semantic.add_glossary(load_academy_glossary(self.root), scheme_name="academy")
         semantic.add_glossary(load_product_glossary(self.product_file(product)), scheme_name="product")

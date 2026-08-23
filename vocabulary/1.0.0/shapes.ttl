@@ -2,17 +2,554 @@
 @prefix shapes: <https://specforge.dev/shapes/1.0.0/> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
+# Diese Shape verlangt für jedes Product eine stabile textuelle Kennung.
 shapes:ProductShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
   sh:targetClass sf:Product ;
-  sh:property [ sh:path dcterms:identifier ; sh:minCount 1 ] .
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:ProductShape-identifier,
+    # Dieser weitere Wert bindet die Prüfung der Product-Version ein.
+    shapes:ProductShape-version,
+    # Dieser weitere Wert bindet die Prüfung des technischen Stacks ein.
+    shapes:ProductShape-stack .
 
+# Ohne genau eine Kennung kann ein Product nicht stabil adressiert werden.
+shapes:ProductShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Product benötigt genau eine dcterms:identifier-Angabe."@de .
+
+# Ohne eine Version kann ein Product nicht reproduzierbar aufgelöst werden.
+shapes:ProductShape-version a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:hasVersion ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Product benötigt genau eine dcterms:hasVersion-Angabe."@de .
+
+# Diese Property Shape verlangt genau einen per IRI bezeichneten technischen Stack.
+shapes:ProductShape-stack a sh:PropertyShape ;
+  # Diese Aussage wählt sf:usesStack als zu prüfende Beziehung.
+  sh:path sf:usesStack ;
+  # Diese Aussage verlangt einen Stack.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere konkurrierende Stacks.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine stabile Stack-IRI.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Ein Product benötigt genau eine technische Stack-IRI."@de .
+
+# Diese Shape verlangt eine stabile Kennung für jede fachliche Entity.
+shapes:EntityShape a sh:NodeShape ;
+  # Diese Aussage richtet die Shape auf alle Entities.
+  sh:targetClass sf:Entity ;
+  # Diese Aussage bindet die Kennungsprüfung ein.
+  sh:property shapes:EntityShape-identifier .
+
+# Diese Property Shape prüft die stabile Entity-Kennung.
+shapes:EntityShape-identifier a sh:PropertyShape ;
+  # Diese Aussage wählt dcterms:identifier als zu prüfendes Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage verlangt genau eine Kennung.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere Kennungen.
+  sh:maxCount 1 ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Eine Entity benötigt genau eine stabile Kennung."@de .
+
+# Diese Shape verlangt für jede Operation eine Kennung und eine bearbeitete Ressource.
 shapes:OperationShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
   sh:targetClass sf:Operation ;
-  sh:property [ sh:path dcterms:identifier ; sh:minCount 1 ] ;
-  sh:property [ sh:path sf:actsOn ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:OperationShape-identifier,
+    # Dieser weitere Wert bindet die Prüfung der bearbeiteten Ressource ein.
+    shapes:OperationShape-actsOn,
+    # Dieser weitere Wert bindet die Prüfung der positiven Aktion ein.
+    shapes:OperationShape-action .
 
+# Die Kennung macht eine Operation unabhängig von ihrem Label referenzierbar.
+shapes:OperationShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Operation benötigt genau eine dcterms:identifier-Angabe."@de .
+
+# actsOn benennt genau die Ressource, welche die Operation fachlich bearbeitet.
+shapes:OperationShape-actsOn a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:actsOn ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Operation muss genau eine per IRI referenzierte Ressource bearbeiten."@de .
+
+# Diese Property Shape verlangt genau eine positive fachliche Aktion.
+shapes:OperationShape-action a sh:PropertyShape ;
+  # Diese Aussage wählt sf:action als zu prüfende Beziehung.
+  sh:path sf:action ;
+  # Diese Aussage verlangt eine Aktion.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere konkurrierende Aktionen.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine stabile Action-IRI.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Eine Operation benötigt genau eine positive Action-IRI."@de .
+
+# Diese Shape verlangt für jede Requirement Instance Target, Pattern und Verification.
 shapes:RequirementInstanceShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
   sh:targetClass sf:RequirementInstance ;
-  sh:property [ sh:path sf:appliesTo ; sh:minCount 1 ; sh:nodeKind sh:IRI ] ;
-  sh:property [ sh:path sf:implementedBy ; sh:minCount 1 ; sh:nodeKind sh:IRI ] .
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementInstanceShape-target,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementInstanceShape-pattern,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementInstanceShape-verification .
+
+# appliesTo benennt das konkrete Target dieser Requirement Instance.
+shapes:RequirementInstanceShape-target a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:appliesTo ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Instance benötigt ein per IRI referenziertes Target."@de .
+
+# implementedBy verbindet die Pflicht mit mindestens einem ausgewählten Pattern.
+shapes:RequirementInstanceShape-pattern a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:implementedBy ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Instance benötigt mindestens ein Implementation Pattern."@de .
+
+# verifiedBy verbindet die Pflicht mit mindestens einer ausführbaren Prüfung.
+shapes:RequirementInstanceShape-verification a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:verifiedBy ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Instance benötigt mindestens eine Verification."@de .
+
+# Diese Shape verlangt für jedes Field eine Kennung und einen per IRI bezeichneten Wertetyp.
+shapes:FieldShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass sf:Field ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:FieldShape-identifier, shapes:FieldShape-valueType .
+
+# Die Kennung macht ein Field innerhalb seines fachlichen Modells stabil adressierbar.
+shapes:FieldShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Field benötigt genau eine dcterms:identifier-Angabe."@de .
+
+# Der Wertetyp muss als IRI referenziert werden, damit er nicht nur ein freier String ist.
+shapes:FieldShape-valueType a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:valueType ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Field benötigt genau einen per IRI bezeichneten Wertetyp."@de .
+
+# Diese Shape verlangt die entscheidbaren Bestandteile jeder Requirement Definition.
+shapes:RequirementDefinitionShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass sf:RequirementDefinition ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:RequirementDefinitionShape-identifier,
+    # Dieser weitere Wert bindet die Prüfung der Definition-Version ein.
+    shapes:RequirementDefinitionShape-version,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementDefinitionShape-description,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementDefinitionShape-control,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementDefinitionShape-operator,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:RequirementDefinitionShape-verification .
+
+# Eine Requirement-Kennung bleibt unabhängig von Formulierung und Version stabil.
+shapes:RequirementDefinitionShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Definition benötigt genau eine Kennung."@de .
+
+# Diese Property Shape pinnt die konkrete Version der Requirement Definition.
+shapes:RequirementDefinitionShape-version a sh:PropertyShape ;
+  # Diese Aussage wählt dcterms:hasVersion als zu prüfendes Prädikat.
+  sh:path dcterms:hasVersion ;
+  # Diese Aussage verlangt eine Version.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere konkurrierende Versionen.
+  sh:maxCount 1 ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Eine Requirement Definition benötigt genau eine Version."@de .
+
+# Die Beschreibung formuliert die Erwartung verständlich für Menschen.
+shapes:RequirementDefinitionShape-description a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:description ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Definition benötigt eine verständliche Beschreibung."@de .
+
+# Das Control benennt die maschinenentscheidbare Systemeigenschaft.
+shapes:RequirementDefinitionShape-control a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:control ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine stabile IRI statt eines freien Control-Strings.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Definition benötigt genau ein Control."@de .
+
+# Der Operator legt fest, wie beobachteter und erwarteter Wert verglichen werden.
+shapes:RequirementDefinitionShape-operator a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:operator ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine stabile IRI statt eines freien Operator-Strings.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Definition benötigt genau einen Operator."@de .
+
+# Mindestens eine Verification macht die Requirement Definition praktisch entscheidbar.
+shapes:RequirementDefinitionShape-verification a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:verifiedBy ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Requirement Definition benötigt mindestens eine Verification."@de .
+
+# Diese Shape verlangt Identität, Adapter und Assertion jeder Verification.
+shapes:VerificationShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass sf:Verification ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:VerificationShape-identifier,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:VerificationShape-adapter,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:VerificationShape-assertion .
+
+# Eine stabile Kennung macht Verification-Ergebnisse eindeutig referenzierbar.
+shapes:VerificationShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Verification benötigt genau eine Kennung."@de .
+
+# Der Adapter benennt die ausführbare Prüfmethode.
+shapes:VerificationShape-adapter a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:verificationAdapter ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine stabile IRI statt eines freien Adapter-Strings.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Verification benötigt genau einen Adapter."@de .
+
+# Die Assertion benennt als IRI die konkret geprüfte Behauptung.
+shapes:VerificationShape-assertion a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:assertion ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Eine Verification benötigt genau eine Assertion-IRI."@de .
+
+# Diese Shape verlangt Identität, Version und erfüllte Requirements eines Patterns.
+shapes:ImplementationPatternShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass sf:ImplementationPattern ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:ImplementationPatternShape-identifier,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:ImplementationPatternShape-version,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:ImplementationPatternShape-satisfies .
+
+# Die Kennung identifiziert ein Pattern unabhängig von seiner Beschreibung.
+shapes:ImplementationPatternShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Implementation Pattern benötigt genau eine Kennung."@de .
+
+# Die Version pinnt den konkreten Inhalt des Patterns.
+shapes:ImplementationPatternShape-version a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:hasVersion ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Implementation Pattern benötigt genau eine Version."@de .
+
+# satisfies benennt mindestens eine Requirement Definition, die das Pattern adressiert.
+shapes:ImplementationPatternShape-satisfies a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path sf:satisfies ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine bestimmte Art von RDF-Knoten.
+  sh:nodeKind sh:IRI ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Implementation Pattern muss mindestens ein Requirement erfüllen."@de .
+
+# Diese Shape verlangt für jedes Control Binding eine per IRI bezeichnete Systemeigenschaft.
+shapes:ControlBindingShape a sh:NodeShape ;
+  # Diese Aussage richtet die Shape auf alle Control Bindings.
+  sh:targetClass sf:ControlBinding ;
+  # Diese Aussage bindet die Prüfung der Control-IRI ein.
+  sh:property shapes:ControlBindingShape-control .
+
+# Diese Property Shape verhindert freie, nicht definierte Control-Strings.
+shapes:ControlBindingShape-control a sh:PropertyShape ;
+  # Diese Aussage wählt sf:control als zu prüfendes Prädikat.
+  sh:path sf:control ;
+  # Diese Aussage verlangt genau ein Control pro Binding.
+  sh:minCount 1 ;
+  # Diese Aussage erlaubt höchstens ein Control pro Binding.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine global adressierbare Control-IRI.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Ein Control Binding benötigt genau eine Control-IRI."@de .
+
+# Diese Shape verlangt eine stabile Kennung und Version für Rule-Metadaten.
+shapes:RuleShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass sf:Rule ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:RuleShape-identifier, shapes:RuleShape-version .
+
+# Die Kennung verbindet RDF-Metadaten mit der RIF Rule.
+shapes:RuleShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Rule-Metadaten benötigen genau eine Kennung."@de .
+
+# Die Version verhindert eine unbemerkte Änderung der referenzierten Rule.
+shapes:RuleShape-version a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:hasVersion ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Rule-Metadaten benötigen genau eine Version."@de .
+
+# Diese Shape verlangt die DCAT-Identität jeder Package-Version.
+shapes:PackageShape a sh:NodeShape ;
+  # Diese Aussage benennt die Klasse der zu prüfenden Ressourcen.
+  sh:targetClass <http://www.w3.org/ns/dcat#Dataset> ;
+  # Genau eine der vier fachlichen Package-Rollen muss zutreffen.
+  sh:xone (
+    # Diese Alternative erkennt ein app-unabhängiges Policy Package.
+    shapes:PolicyPackageRoleShape
+    # Diese Alternative erkennt ein fachliches Domain Package.
+    shapes:DomainPackageRoleShape
+    # Diese Alternative erkennt ein technisches Implementation Package.
+    shapes:ImplementationPackageRoleShape
+    # Diese Alternative erkennt ein Domain und Implementation verbindendes Integration Package.
+    shapes:IntegrationPackageRoleShape
+  ) ;
+  # Diese Aussage bindet eine Feldprüfung in die übergeordnete Shape ein.
+  sh:property shapes:PackageShape-title,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:PackageShape-identifier,
+    # Diese weitere Property Shape gehört ebenfalls zur übergeordneten Prüfung.
+    shapes:PackageShape-version,
+    # Dieser weitere Wert bindet die Prüfung der katalogisierten Dateien ein.
+    shapes:PackageShape-distribution .
+
+# Diese Hilfs-Shape erkennt ein Policy Package anhand seines RDF-Typs.
+shapes:PolicyPackageRoleShape sh:property shapes:PolicyPackageRoleShape-type .
+
+# Diese Property Shape prüft den exakten Typ PolicyPackage.
+shapes:PolicyPackageRoleShape-type sh:path rdf:type ;
+  # Diese Aussage verlangt den fachlichen Typ PolicyPackage.
+  sh:hasValue sf:PolicyPackage .
+
+# Diese Hilfs-Shape erkennt ein Domain Package anhand seines RDF-Typs.
+shapes:DomainPackageRoleShape sh:property shapes:DomainPackageRoleShape-type .
+
+# Diese Property Shape prüft den exakten Typ DomainPackage.
+shapes:DomainPackageRoleShape-type sh:path rdf:type ;
+  # Diese Aussage verlangt den fachlichen Typ DomainPackage.
+  sh:hasValue sf:DomainPackage .
+
+# Diese Hilfs-Shape erkennt ein Implementation Package anhand seines RDF-Typs.
+shapes:ImplementationPackageRoleShape sh:property shapes:ImplementationPackageRoleShape-type .
+
+# Diese Property Shape prüft den exakten Typ ImplementationPackage.
+shapes:ImplementationPackageRoleShape-type sh:path rdf:type ;
+  # Diese Aussage verlangt den fachlichen Typ ImplementationPackage.
+  sh:hasValue sf:ImplementationPackage .
+
+# Diese Hilfs-Shape erkennt ein Integration Package anhand seines RDF-Typs.
+shapes:IntegrationPackageRoleShape sh:property shapes:IntegrationPackageRoleShape-type .
+
+# Diese Property Shape prüft den exakten Typ IntegrationPackage.
+shapes:IntegrationPackageRoleShape-type sh:path rdf:type ;
+  # Diese Aussage verlangt den fachlichen Typ IntegrationPackage.
+  sh:hasValue sf:IntegrationPackage .
+
+# Der Titel erklärt Menschen den Zweck des Packages.
+shapes:PackageShape-title a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:title ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Package benötigt einen Titel."@de .
+
+# Die Kennung ist der stabile Package-Name für Abhängigkeiten.
+shapes:PackageShape-identifier a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:identifier ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Package benötigt genau eine Kennung."@de .
+
+# Die Version pinnt eine konkrete, unveränderliche Package-Ausgabe.
+shapes:PackageShape-version a sh:PropertyShape ;
+  # Diese Aussage benennt das von der Constraint geprüfte Prädikat.
+  sh:path dcterms:hasVersion ;
+  # Diese Aussage legt die mindestens erforderliche Anzahl von Werten fest.
+  sh:minCount 1 ;
+  # Diese Aussage legt die höchstens erlaubte Anzahl von Werten fest.
+  sh:maxCount 1 ;
+  # Diese Aussage erklärt einen Verstoß in verständlicher Sprache.
+  sh:message "Ein Package benötigt genau eine Version."@de .
+
+# Diese Property Shape verlangt mindestens eine lokal katalogisierte Package-Datei.
+shapes:PackageShape-distribution a sh:PropertyShape ;
+  # Diese Aussage wählt die standardisierte DCAT-Distribution-Beziehung.
+  sh:path dcat:distribution ;
+  # Diese Aussage verlangt mindestens eine fachliche Payload-Datei.
+  sh:minCount 1 ;
+  # Diese Aussage verlangt eine global adressierbare Distribution-Ressource.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Ein Package muss mindestens eine lokale RDF- oder RIF-Distribution katalogisieren."@de .
+
+# Diese Shape verlangt beide Seiten jedes Integration Packages.
+shapes:IntegrationPackageShape a sh:NodeShape ;
+  # Diese Aussage richtet die Shape auf alle Integration Packages.
+  sh:targetClass sf:IntegrationPackage ;
+  # Diese Aussage bindet die beiden Integrationsprüfungen ein.
+  sh:property shapes:IntegrationPackageShape-domain,
+    # Dieser weitere Wert bindet die Prüfung der Implementation-Seite ein.
+    shapes:IntegrationPackageShape-implementation .
+
+# Diese Property Shape verlangt genau eine fachliche Domain-Seite.
+shapes:IntegrationPackageShape-domain a sh:PropertyShape ;
+  # Diese Aussage wählt sf:bindsDomain als zu prüfende Beziehung.
+  sh:path sf:bindsDomain ;
+  # Diese Aussage verlangt eine Domain-Verbindung.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere Domain-Verbindungen.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine versionierte Package-IRI.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Ein Integration Package muss genau eine Domain-Package-Version binden."@de .
+
+# Diese Property Shape verlangt genau eine technische Implementation-Seite.
+shapes:IntegrationPackageShape-implementation a sh:PropertyShape ;
+  # Diese Aussage wählt sf:bindsImplementation als zu prüfende Beziehung.
+  sh:path sf:bindsImplementation ;
+  # Diese Aussage verlangt eine Implementation-Verbindung.
+  sh:minCount 1 ;
+  # Diese Aussage verhindert mehrere Implementation-Verbindungen.
+  sh:maxCount 1 ;
+  # Diese Aussage verlangt eine versionierte Package-IRI.
+  sh:nodeKind sh:IRI ;
+  # Diese Meldung erklärt einen Verstoß im Validation Report.
+  sh:message "Ein Integration Package muss genau eine Implementation-Package-Version binden."@de .

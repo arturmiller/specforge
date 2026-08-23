@@ -1,0 +1,53 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix pattern: <https://specforge.dev/pattern/> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix stack: <https://specforge.dev/stack/> .
+@prefix binding: <https://specforge.dev/control-binding/> .
+@prefix constraint: <https://specforge.dev/constraint/> .
+
+# Dieses Pattern beschreibt die technische Umsetzung fastapi/calendar-crud.
+pattern:fastapi-calendar-crud a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/calendar-crud" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage verbindet das Product mit seinem technischen Stack.
+  sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:PRODUCT-001, requirement:PRODUCT-002, requirement:PRODUCT-003, requirement:PRODUCT-004 ;
+  # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+  sf:controlBinding binding:fastapi-calendar-crud-event_create, binding:fastapi-calendar-crud-event_read, binding:fastapi-calendar-crud-event_update, binding:fastapi-calendar-crud-event_delete ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-PRODUCT-001, verification:TEST-PRODUCT-002, verification:TEST-PRODUCT-003, verification:TEST-PRODUCT-004 ;
+  # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+  sf:artifact "backend/app.py", "frontend/src/App.tsx" .
+
+# Dieses Binding verlangt für event_create den vom Requirement erwarteten Wert.
+binding:fastapi-calendar-crud-event_create a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/event_create> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "enabled" .
+
+# Dieses Binding verlangt für event_read den vom Requirement erwarteten Wert.
+binding:fastapi-calendar-crud-event_read a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/event_read> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "enabled" .
+
+# Dieses Binding verlangt für event_update den vom Requirement erwarteten Wert.
+binding:fastapi-calendar-crud-event_update a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/event_update> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "enabled" .
+
+# Dieses Binding verlangt für event_delete den vom Requirement erwarteten Wert.
+binding:fastapi-calendar-crud-event_delete a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/event_delete> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "enabled" .

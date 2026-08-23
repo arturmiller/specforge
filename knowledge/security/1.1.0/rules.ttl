@@ -1,0 +1,45 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rule: <https://specforge.dev/rule/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# Diese Rule leitet SEC-001 für ein durch positive Facts gebundenes Target ab.
+rule:security-authenticated-personal-data a sf:Rule ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security/authenticated-personal-data" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.1.0" ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:security-authenticated-personal-data-authenticated-personal-data .
+
+# Diese Quelle bezeichnet den normativen Abschnitt für die Rule security/authenticated-personal-data.
+source:security-authenticated-personal-data-authenticated-personal-data a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "authenticated-personal-data" .
+
+# Diese Rule leitet SEC-002 für ein durch positive Facts gebundenes Target ab.
+rule:security-owned-resources a sf:Rule ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security/owned-resources" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.1.0" ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:security-owned-resources-ownership .
+
+# Diese Quelle bezeichnet den normativen Abschnitt für die Rule security/owned-resources.
+source:security-owned-resources-ownership a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "ownership" .

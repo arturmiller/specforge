@@ -1,0 +1,25 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rule: <https://specforge.dev/rule/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# Diese Rule leitet PRIVACY-001 für ein durch positive Facts gebundenes Target ab.
+rule:privacy-minimize-personal-data-response a sf:Rule ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy/minimize-personal-data-response" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:privacy-minimize-personal-data-response-response-minimization .
+
+# Diese Quelle bezeichnet den normativen Abschnitt für die Rule privacy/minimize-personal-data-response.
+source:privacy-minimize-personal-data-response-response-minimization a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "response-minimization" .

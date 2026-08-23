@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from urllib.parse import quote, unquote
 from xml.etree import ElementTree as ET
 
@@ -56,6 +57,9 @@ def export_rules(rules: list[DatalogRule]) -> str:
             declare = ET.SubElement(forall, _tag("declare"))
             _term(declare, f"${variable}")
         formula = ET.SubElement(forall, _tag("formula"))
+        formula.append(ET.Comment(
+            f" Diese Rule leitet {rule.head.relation} aus {len(rule.body)} positiv bekannten Bedingungen ab. "
+        ))
         implies = ET.SubElement(formula, _tag("Implies"))
         identifier = ET.SubElement(implies, _tag("id"))
         _term(identifier, f"https://specforge.dev/rif-rule/{quote(rule.id, safe='-._~')}/{quote(rule.version, safe='-._~')}", iri=True)
@@ -67,16 +71,63 @@ def export_rules(rules: list[DatalogRule]) -> str:
         for term in rule.body:
             body_parent = ET.SubElement(conjunction, _tag("formula")) if conjunction is not None else if_part
             if isinstance(term, Atom):
+                body_parent.append(ET.Comment(
+                    f" Diese Bedingung benötigt eine bekannte {term.relation}-Aussage. "
+                ))
                 _atom(body_parent, term)
             else:
+                body_parent.append(ET.Comment(
+                    " Diese Bedingung vergleicht zwei bereits positiv gebundene Werte. "
+                ))
                 equal = ET.SubElement(body_parent, _tag("Equal"))
                 left, right = ET.SubElement(equal, _tag("left")), ET.SubElement(equal, _tag("right"))
                 _term(left, term.left)
                 _term(right, term.right)
         then_part = ET.SubElement(implies, _tag("then"))
+        then_part.append(ET.Comment(
+            f" Der Rule-Head erzeugt eine neue {rule.head.relation}-Aussage. "
+        ))
         _atom(then_part, rule.head)
     ET.indent(document, space="  ")
     return ET.tostring(document, encoding="unicode", xml_declaration=True) + "\n"
+
+
+def _prolog_term(value) -> str:
+    if is_variable(value):
+        name = re.sub(r"\W", "_", str(value)[1:])
+        return name[:1].upper() + name[1:]
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    return "'" + str(value).replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
+def _prolog_atom(atom: Atom) -> str:
+    relation = re.sub(r"\W", "_", atom.relation)
+    return f"{relation}({', '.join(_prolog_term(term) for term in atom.terms)})"
+
+
+def export_prolog(rules: list[DatalogRule]) -> str:
+    """Generate a non-normative, fully commented Prolog reading view."""
+    blocks: list[str] = []
+    for rule in sorted(rules, key=lambda item: (item.id, item.version, repr(item.body))):
+        validate_rule(rule)
+        lines = [
+            f"% Rule {rule.id} leitet ihre DANN-Aussage aus positiv bekannten WENN-Bedingungen ab.",
+            f"% Der Head erzeugt eine neue {rule.head.relation}-Aussage, sobald alle Bedingungen gelten.",
+            f"{_prolog_atom(rule.head)} :-",
+        ]
+        for index, term in enumerate(rule.body):
+            if isinstance(term, Atom):
+                lines.append(f"    % Diese WENN-Bedingung benötigt eine bekannte {term.relation}-Aussage.")
+                expression = _prolog_atom(term)
+            else:
+                lines.append("    % Diese WENN-Bedingung vergleicht zwei bereits gebundene Werte auf Gleichheit.")
+                expression = f"{_prolog_term(term.left)} = {_prolog_term(term.right)}"
+            lines.append(f"    {expression}{'.' if index == len(rule.body) - 1 else ','}")
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks) + ("\n" if blocks else "")
 
 
 def _read_term(element: ET.Element):

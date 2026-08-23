@@ -1,0 +1,13 @@
+# Liefert SHACL-Verstöße mit betroffenem Knoten und verständlicher Fehlermeldung.
+SELECT ?result ?focus ?message WHERE {
+  # Ein Validation Report verweist auf jedes einzelne Validierungsergebnis.
+  GRAPH <https://specforge.dev/graph/evidence> {
+    # result verbindet den Bericht mit einem konkreten SHACL-Verstoß.
+    ?report sh:result ?result .
+    # Der Focus Node ist die Ressource, welche die Constraint verletzt.
+    ?result sh:focusNode ?focus .
+    # Die verständliche Meldung ist optional, falls ein fremdes Shape keine bereitstellt.
+    OPTIONAL { ?result sh:resultMessage ?message . }
+  }
+}
+ORDER BY ?result

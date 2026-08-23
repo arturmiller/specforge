@@ -1,6 +1,6 @@
 # ADR 0001: Canonical typed intermediate model
 
-Status: Superseded by ADR 0006
+Status: Superseded by ADR 0006 and ADR 0007
 
 ## Context
 

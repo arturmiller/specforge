@@ -189,15 +189,15 @@ def test_permission_gate_accepts_only_may_modify(tmp_path):
 
 
 def test_permission_gate_rejects_out_of_scope_changes(tmp_path):
-    result = RunManager(tmp_path).execute(run_order(), WritingAdapter("products/calendar/product.yaml"), gate_runner=PassingGates())
+    result = RunManager(tmp_path).execute(run_order(), WritingAdapter("products/calendar/product.trig"), gate_runner=PassingGates())
     assert result.status == AgentRunStatus.PERMISSION_VIOLATION
     assert result.work_order_status.value == "REJECTED"
-    assert result.permission_violations == ["products/calendar/product.yaml"]
+    assert result.permission_violations == ["products/calendar/product.trig"]
 
 
 def test_repair_order_contains_only_original_scope_and_failures(tmp_path):
     order = run_order()
-    run = RunManager(tmp_path).execute(order, WritingAdapter("products/calendar/product.yaml"), gate_runner=PassingGates())
+    run = RunManager(tmp_path).execute(order, WritingAdapter("products/calendar/product.trig"), gate_runner=PassingGates())
     repair = create_repair_order(order, run, attempt=1)
     assert repair.original_work_order.permissions == order.permissions
     assert [gate.id for gate in repair.failed_gates] == ["permission"]

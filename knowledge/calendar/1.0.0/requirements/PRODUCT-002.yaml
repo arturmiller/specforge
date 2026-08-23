@@ -1,7 +1,0 @@
-id: PRODUCT-002
-version: "1.0.0"
-statement: A user can read an owned event.
-expectation: {control: event_read, operator: equals, value: enabled}
-verifications:
-  - {id: TEST-PRODUCT-002, adapter: http_request, setup: owner_read, assertion: {response_status: 200, resource_matches: true}}
-source: {type: product_spec, document: calendar-product, version: "1.0.0", section: read}

@@ -1,0 +1,356 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rif:Document xmlns:rif="http://www.w3.org/2007/rif#">
+  <rif:payload>
+    <rif:Group>
+      <rif:sentence>
+        <rif:Forall>
+          <rif:declare>
+            <rif:Var>operation</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>resource</rif:Var>
+          </rif:declare>
+          <rif:formula>
+            <!-- Diese Rule leitet requires aus 2 positiv bekannten Bedingungen ab. -->
+            <rif:Implies>
+              <rif:id>
+                <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/rif-rule/security%2Fauthenticated-personal-data%23branch-1/1.1.0</rif:Const>
+              </rif:id>
+              <rif:if>
+                <rif:And>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte acts_on-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/acts_on</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Var>resource</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte contains_classification-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/contains_classification</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>resource</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">PersonalData</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                </rif:And>
+              </rif:if>
+              <rif:then>
+                <!-- Der Rule-Head erzeugt eine neue requires-Aussage. -->
+                <rif:Atom>
+                  <rif:op>
+                    <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/requires</rif:Const>
+                  </rif:op>
+                  <rif:args ordered="yes">
+                    <rif:Var>operation</rif:Var>
+                    <rif:Const type="http://www.w3.org/2001/XMLSchema#string">SEC-001</rif:Const>
+                  </rif:args>
+                </rif:Atom>
+              </rif:then>
+            </rif:Implies>
+          </rif:formula>
+        </rif:Forall>
+      </rif:sentence>
+      <rif:sentence>
+        <rif:Forall>
+          <rif:declare>
+            <rif:Var>operation</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>owner_field</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>resource</rif:Var>
+          </rif:declare>
+          <rif:formula>
+            <!-- Diese Rule leitet requires aus 5 positiv bekannten Bedingungen ab. -->
+            <rif:Implies>
+              <rif:id>
+                <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/rif-rule/security%2Fowned-resources%23branch-1/1.1.0</rif:Const>
+              </rif:id>
+              <rif:if>
+                <rif:And>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte scope-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/scope</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">own</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte acts_on-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/acts_on</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Var>resource</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte has_field-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/has_field</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>resource</rif:Var>
+                        <rif:Var>owner_field</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte relation-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/relation</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>owner_field</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">ownership</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte action-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/action</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">read</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                </rif:And>
+              </rif:if>
+              <rif:then>
+                <!-- Der Rule-Head erzeugt eine neue requires-Aussage. -->
+                <rif:Atom>
+                  <rif:op>
+                    <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/requires</rif:Const>
+                  </rif:op>
+                  <rif:args ordered="yes">
+                    <rif:Var>operation</rif:Var>
+                    <rif:Const type="http://www.w3.org/2001/XMLSchema#string">SEC-002</rif:Const>
+                  </rif:args>
+                </rif:Atom>
+              </rif:then>
+            </rif:Implies>
+          </rif:formula>
+        </rif:Forall>
+      </rif:sentence>
+      <rif:sentence>
+        <rif:Forall>
+          <rif:declare>
+            <rif:Var>operation</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>owner_field</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>resource</rif:Var>
+          </rif:declare>
+          <rif:formula>
+            <!-- Diese Rule leitet requires aus 5 positiv bekannten Bedingungen ab. -->
+            <rif:Implies>
+              <rif:id>
+                <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/rif-rule/security%2Fowned-resources%23branch-2/1.1.0</rif:Const>
+              </rif:id>
+              <rif:if>
+                <rif:And>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte scope-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/scope</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">own</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte acts_on-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/acts_on</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Var>resource</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte has_field-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/has_field</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>resource</rif:Var>
+                        <rif:Var>owner_field</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte relation-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/relation</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>owner_field</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">ownership</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte action-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/action</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">update</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                </rif:And>
+              </rif:if>
+              <rif:then>
+                <!-- Der Rule-Head erzeugt eine neue requires-Aussage. -->
+                <rif:Atom>
+                  <rif:op>
+                    <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/requires</rif:Const>
+                  </rif:op>
+                  <rif:args ordered="yes">
+                    <rif:Var>operation</rif:Var>
+                    <rif:Const type="http://www.w3.org/2001/XMLSchema#string">SEC-002</rif:Const>
+                  </rif:args>
+                </rif:Atom>
+              </rif:then>
+            </rif:Implies>
+          </rif:formula>
+        </rif:Forall>
+      </rif:sentence>
+      <rif:sentence>
+        <rif:Forall>
+          <rif:declare>
+            <rif:Var>operation</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>owner_field</rif:Var>
+          </rif:declare>
+          <rif:declare>
+            <rif:Var>resource</rif:Var>
+          </rif:declare>
+          <rif:formula>
+            <!-- Diese Rule leitet requires aus 5 positiv bekannten Bedingungen ab. -->
+            <rif:Implies>
+              <rif:id>
+                <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/rif-rule/security%2Fowned-resources%23branch-3/1.1.0</rif:Const>
+              </rif:id>
+              <rif:if>
+                <rif:And>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte scope-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/scope</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">own</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte acts_on-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/acts_on</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Var>resource</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte has_field-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/has_field</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>resource</rif:Var>
+                        <rif:Var>owner_field</rif:Var>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte relation-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/relation</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>owner_field</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">ownership</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                  <rif:formula>
+                    <!-- Diese Bedingung benötigt eine bekannte action-Aussage. -->
+                    <rif:Atom>
+                      <rif:op>
+                        <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/action</rif:Const>
+                      </rif:op>
+                      <rif:args ordered="yes">
+                        <rif:Var>operation</rif:Var>
+                        <rif:Const type="http://www.w3.org/2001/XMLSchema#string">delete</rif:Const>
+                      </rif:args>
+                    </rif:Atom>
+                  </rif:formula>
+                </rif:And>
+              </rif:if>
+              <rif:then>
+                <!-- Der Rule-Head erzeugt eine neue requires-Aussage. -->
+                <rif:Atom>
+                  <rif:op>
+                    <rif:Const type="http://www.w3.org/2007/rif#iri">https://specforge.dev/relation/requires</rif:Const>
+                  </rif:op>
+                  <rif:args ordered="yes">
+                    <rif:Var>operation</rif:Var>
+                    <rif:Const type="http://www.w3.org/2001/XMLSchema#string">SEC-002</rif:Const>
+                  </rif:args>
+                </rif:Atom>
+              </rif:then>
+            </rif:Implies>
+          </rif:formula>
+        </rif:Forall>
+      </rif:sentence>
+    </rif:Group>
+  </rif:payload>
+</rif:Document>

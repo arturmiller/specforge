@@ -1,7 +1,0 @@
-id: PRIVACY-001
-version: "1.1.0"
-statement: API responses expose only fields declared by the resolved resource schema.
-expectation: {control: response_data_minimization, operator: equals, value: declared_fields_only}
-verifications:
-  - {id: TEST-PRIVACY-001, adapter: response_schema, setup: owner_read, assertion: {response_fields_from: resolved_resource_schema}}
-source: {type: internal_policy, document: privacy-policy, version: "1.0.0", section: response-minimization}

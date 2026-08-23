@@ -1,0 +1,25 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rule: <https://specforge.dev/rule/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# Diese Rule leitet DATA-001 für ein durch positive Facts gebundenes Target ab.
+rule:calendar-event-time-interval a sf:Rule ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar/event-time-interval" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:calendar-event-time-interval-event-time .
+
+# Diese Quelle bezeichnet den normativen Abschnitt für die Rule calendar/event-time-interval.
+source:calendar-event-time-interval-event-time a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "architecture_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-invariants" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "event-time" .

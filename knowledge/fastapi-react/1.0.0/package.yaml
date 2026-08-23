@@ -1,5 +1,0 @@
-name: fastapi-react
-version: "1.0.0"
-owner: platform-team
-kind: implementation
-purpose: Provides reusable FastAPI and React implementation patterns.

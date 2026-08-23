@@ -1,7 +1,0 @@
-id: PLATFORM-001
-version: "1.0.0"
-statement: Authenticated event reads are limited to sixty requests per minute.
-expectation: {control: rate_limit, operator: equals, value: 60}
-verifications:
-  - {id: TEST-PLATFORM-001, adapter: rate_limit, setup: authenticated_reads, assertion: {max_requests_per_minute: 60}}
-source: {type: internal_policy, document: platform-policy, version: "1.0.0", section: traffic}

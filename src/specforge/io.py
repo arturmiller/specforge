@@ -5,10 +5,17 @@ import json
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-
 def read_yaml(path: Path) -> Any:
+    # PyYAML belongs only to the explicit legacy migration boundary. Keeping the
+    # import local means the standard RDF/RIF compiler path does not load or
+    # require the proprietary authoring parser.
+    try:
+        import yaml
+    except ImportError as exc:
+        raise ValueError(
+            "legacy YAML migration requires the optional 'specforge[legacy]' dependency"
+        ) from exc
+
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 

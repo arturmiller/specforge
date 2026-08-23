@@ -1,0 +1,51 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix concept: <https://specforge.dev/concept/> .
+@prefix classification: <https://specforge.dev/classification/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# Person ist eine formal adressierbare Klasse des Knowledge Packages.
+concept:Person a rdfs:Class ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "Person" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese weitere Klassifikation gilt ebenfalls für die Ressource.
+  sf:classifiedAs classification:PersonalDataSubject ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:privacy-concepts-person .
+
+# Diese Quelle bezeichnet die Definition von Person in privacy-concepts.
+source:privacy-concepts-person a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_taxonomy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-concepts" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "person" .
+
+# User ist eine formal adressierbare Klasse des Knowledge Packages.
+concept:User a rdfs:Class ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "User" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage macht die Ressource zur formalen Unterklasse des genannten Typs.
+  rdfs:subClassOf concept:Person ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:privacy-concepts-user .
+
+# Diese Quelle bezeichnet die Definition von User in privacy-concepts.
+source:privacy-concepts-user a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_taxonomy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-concepts" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "user" .

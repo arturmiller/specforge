@@ -166,8 +166,8 @@ def test_report_rejects_evidence_from_an_old_resolved_spec(tmp_path: Path):
     resolved = Compiler(root).resolve("products/calendar")
     generate_product(root, resolved)
     validate_product(root, "products/calendar")
-    product = root / "products/calendar/product.yaml"
-    product.write_text(product.read_text(encoding="utf-8").replace('version: "1.0.0"', 'version: "1.0.1"', 1), encoding="utf-8")
+    product = root / "products/calendar/product.trig"
+    product.write_text(product.read_text(encoding="utf-8").replace('dcterms:hasVersion "1.0.0"', 'dcterms:hasVersion "1.0.1"', 1), encoding="utf-8")
     import pytest
     with pytest.raises(RuntimeError, match="stale evidence"):
         create_report(root, "products/calendar")
@@ -177,7 +177,7 @@ def test_knowledge_content_change_changes_resolved_hash(tmp_path: Path):
     root = copy_project(tmp_path)
     compiler = Compiler(root)
     before = compiler.resolve("products/calendar").content_hash
-    requirement = root / "knowledge/security/1.1.0/requirements/SEC-001.yaml"
+    requirement = root / "knowledge/security/1.1.0/requirements.ttl"
     requirement.write_text(requirement.read_text(encoding="utf-8").replace("authenticated access", "verified authenticated access"), encoding="utf-8")
     after = compiler.resolve("products/calendar").content_hash
     assert after != before

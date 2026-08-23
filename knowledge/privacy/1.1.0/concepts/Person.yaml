@@ -1,4 +1,0 @@
-id: Person
-version: "1.0.0"
-classifications: [PersonalDataSubject]
-source: {type: internal_taxonomy, document: privacy-concepts, version: "1.0.0", section: person}

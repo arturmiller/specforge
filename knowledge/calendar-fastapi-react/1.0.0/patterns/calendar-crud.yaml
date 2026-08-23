@@ -1,7 +1,0 @@
-id: fastapi/calendar-crud
-version: "1.0.0"
-satisfies: [PRODUCT-001, PRODUCT-002, PRODUCT-003, PRODUCT-004]
-stack: fastapi-react
-controls: {event_create: enabled, event_read: enabled, event_update: enabled, event_delete: enabled}
-verifications: [TEST-PRODUCT-001, TEST-PRODUCT-002, TEST-PRODUCT-003, TEST-PRODUCT-004]
-artifacts: [backend/app.py, frontend/src/App.tsx]

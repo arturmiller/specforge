@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 from .compiler import Compiler
-from .io import read_yaml, write_if_changed
+from .io import write_if_changed
 from .glossary import load_academy_glossary, load_product_glossary as _load_product_glossary
 from .semantic import RELATION_DEFINITIONS
 from .views import query_view
@@ -28,7 +28,7 @@ COLORS = {
     "artifact": "#77808b",
 }
 
-_EDGE_LABELS = {key: key.replace("_", " ") for key in RELATION_DEFINITIONS}
+_EDGE_LABELS = {key: label for key, (_, label, _) in RELATION_DEFINITIONS.items()}
 RELATIONSHIP_GLOSSARY = {
     _EDGE_LABELS[key]: definition
     for key, (_, _, definition) in RELATION_DEFINITIONS.items()
@@ -145,7 +145,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
         manifest = manifests[name]
         package_id = node(
             f"package:{name}", "package", name,
-            source=f"knowledge/{name}/{metadata['version']}/package.yaml",
+            source=f"knowledge/{name}/{metadata['version']}/package.trig",
             package_kind=manifest.kind or "legacy", version=metadata["version"],
             owner=manifest.owner, purpose=manifest.purpose, content_hash=metadata["hash"],
         )
@@ -213,17 +213,27 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
             edge(operation_id, f"entity:{operation.returns}", "returns")
         edge(operation_id, f"entity:{operation.actor}", "actor")
 
-    yaml_by_id: dict[str, str] = {}
-    for path in sorted((root / "knowledge").glob("*/*/**/*.yaml")):
-        data = read_yaml(path)
-        if isinstance(data, dict) and "id" in data:
-            yaml_by_id.setdefault(str(data["id"]), path.relative_to(root).as_posix())
+    source_by_id: dict[str, str] = {}
+    for name, metadata in sorted(packages.items()):
+        package = root / "knowledge" / name / metadata["version"]
+        for filename, items in (
+            ("requirements.ttl", [item for item in definitions.values() if item.source.document]),
+            ("patterns.ttl", patterns),
+            ("rules.ttl", rules),
+        ):
+            path = package / filename
+            if not path.exists():
+                continue
+            source = path.read_text(encoding="utf-8")
+            for item in items:
+                if f'"{item.id}"' in source:
+                    source_by_id.setdefault(item.id, path.relative_to(root).as_posix())
 
     for rule in rules:
         definition = definitions[rule.then.requirement]
         title = _rule_title(definition.expectation.control, definition.expectation.value)
         rule_id = node(
-            f"rule:{rule.id}", "rule", title, source=yaml_by_id.get(rule.id, ""),
+            f"rule:{rule.id}", "rule", title, source=source_by_id.get(rule.id, ""),
             technical_id=rule.id, version=rule.version,
             wenn=_condition_lines(rule.when),
             dann=[
@@ -237,7 +247,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
         edge(rule_id, requirement_id, "derives")
 
     for definition in definitions.values():
-        definition_source = yaml_by_id.get(definition.id, "")
+        definition_source = source_by_id.get(definition.id, "")
         node(
             f"requirement-definition:{definition.id}", "requirement", definition.id,
             source=definition_source, version=definition.version,
@@ -277,7 +287,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
     for instance in resolved.requirements:
         instance_id = node(
             f"requirement:{instance.id}", "requirement", instance.id,
-            source=yaml_by_id.get(instance.requirement, ""), statement=instance.statement,
+            source=source_by_id.get(instance.requirement, ""), statement=instance.statement,
             requirement_kind=instance.kind, status=instance.status.value,
             expectation=f"{instance.expectation.control} = {_display(instance.expectation.value)}",
             target=instance.target,
@@ -324,7 +334,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
 
     for pattern in patterns:
         pattern_id = node(
-            f"pattern:{pattern.id}", "pattern", pattern.id, source=yaml_by_id.get(pattern.id, ""),
+            f"pattern:{pattern.id}", "pattern", pattern.id, source=source_by_id.get(pattern.id, ""),
             version=pattern.version, stack=pattern.stack, controls=pattern.controls or pattern.addresses,
         )
         for verification in pattern.verifications:
@@ -339,7 +349,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
     # package directly and retain them only when no concrete instance exists.
     instantiated = {instance.requirement for instance in resolved.requirements}
     for requirement_id, definition in definitions.items():
-        source = yaml_by_id.get(requirement_id, "")
+        source = source_by_id.get(requirement_id, "")
         parts = source.split("/")
         if len(parts) > 1:
             edge(f"package:{parts[1]}", f"requirement-definition:{requirement_id}", "contains")
@@ -348,7 +358,7 @@ def build_graph(root: Path, product: str | Path) -> dict[str, Any]:
 
     glossary_rows = list(query_view(semantic, "glossary"))
     academy_glossary = {
-        str(row.label): str(row.definition) for row in glossary_rows if str(row.schemeName) == "academy"
+        str(row.label): str(row.definition) for row in glossary_rows if str(row.schemeName) != "product"
     }
     product_glossary = {
         str(row.label): str(row.definition) for row in glossary_rows if str(row.schemeName) == "product"

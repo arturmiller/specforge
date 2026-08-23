@@ -1,7 +1,0 @@
-id: OBS-001
-version: "1.0.0"
-statement: Access to personal resources emits an audit event.
-expectation: {control: audit_events, operator: equals, value: [access_granted, access_denied]}
-verifications:
-  - {id: TEST-OBS-001, adapter: audit_log, setup: owner_read, assertion: {audit_event: access_granted}}
-source: {type: internal_policy, document: observability-policy, version: "1.0.0", section: resource-access}

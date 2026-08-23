@@ -1,256 +1,210 @@
 # Knowledge in SpecForge
 
-Knowledge ist der versionierte, wiederverwendbare Teil einer Spezifikation. Ein
-Produkt beschreibt seine konkreten Entitäten und Operationen; Knowledge-Pakete
-liefern dazu Begriffe, formale Requirements, Regeln für deren Anwendbarkeit und
-passende Implementierungsmuster. Beim Auflösen entsteht daraus eine
-deterministische `resolved-spec.json`.
+Knowledge ist der versionierte, wiederverwendbare Teil einer Spezifikation.
+Ein Product beschreibt konkrete Entities und Operationen; Knowledge Packages
+liefern Begriffe, Requirements, Rules und passende Implementation Patterns.
 
-## Paketstruktur und Einbindung
+Fachliche Quellen verwenden ausschließlich standardisierte RDF-/RIF-Formate.
+YAML ist kein Autorenformat mehr.
 
-Ein Paket liegt unter `knowledge/<namespace>/<version>/`:
+## Paketstruktur
 
 ```text
-knowledge/privacy/1.0.0/
-├── package.yaml
-├── concepts/*.yaml
-├── requirements/*.yaml
-├── rules/*.yaml
-└── patterns/*.yaml
+knowledge/privacy/1.1.0/
+├── package.trig       # DCAT-Metadaten und Package-Rolle
+├── vocabulary.ttl     # SKOS-Begriffe und RDFS-Klassen
+├── requirements.ttl   # Requirement Definitions und Verifications
+├── patterns.ttl       # optionale Implementation Patterns
+├── rules.ttl          # Rule-Metadaten und Provenance
+└── rules.rif.xml      # normative positive Rule-Logik in RIF Core
 ```
 
-Knowledge-Pakete haben eine explizite Rolle: `policy` beschreibt
-app-unabhängige Erwartungen, `domain` die Fachdomäne, `implementation` einen
-technischen Stack und `integration` die Verbindung aus genau einer Domäne und
-einer Implementierung. Policy-Pakete wie `privacy` und `security` enthalten
-keine stack-spezifischen Patterns. Wiederverwendbare Patterns liegen im
-Implementierungspaket; domänen- und stack-spezifische Patterns liegen im
-Integrationspaket. Ein Produkt pinnt alle benötigten Pakete unabhängig.
+Nur `package.trig` ist zwingend. Die übrigen Dateien erscheinen, wenn das
+Package entsprechende Ressourcen enthält. Die redaktionelle Dateiaufteilung
+ist nicht semantisch: Entscheidend sind das zusammengeführte RDF-Dataset und
+die normalisierten RIF Rules.
 
-Nur `package.yaml` ist zwingend vorhanden. Die vier Unterordner sind optional.
-Das Manifest bezeichnet das Paket:
+Jede handgeschriebene Aussage besitzt einen unmittelbar zugeordneten
+Lernkommentar. `uv run specforge lint-comments knowledge` prüft diesen Vertrag.
+Kommentare helfen beim Lernen, sind aber nicht Teil des RDFC- oder
+Package-Content-Hashs.
 
-```yaml
-name: privacy
-version: "1.0.0"
-owner: privacy-team
-kind: policy
-purpose: Defines app-independent privacy knowledge.
+## Package-Metadaten und Rollen
+
+Eine Package-Version ist ein `dcat:Dataset`. `dcterms:identifier`,
+`dcterms:hasVersion`, `dcterms:title`, `dcterms:publisher` und
+`dcterms:description` beschreiben sie. SpecForge ergänzt vier präzise Rollen:
+
+- `sf:PolicyPackage`: app-unabhängige Erwartungen und Rules,
+- `sf:DomainPackage`: Wissen über eine Fachdomäne,
+- `sf:ImplementationPackage`: technische Patterns eines Stacks,
+- `sf:IntegrationPackage`: Verbindung genau einer Domain und Implementation.
+
+Ein Integration Package verwendet `sf:bindsDomain` und
+`sf:bindsImplementation`. Allgemeine Abhängigkeiten verwenden
+`dcterms:requires`.
+
+```trig
+# Dieser Graph beschreibt die Verbindung der Calendar-Domäne mit FastAPI React.
+<https://specforge.dev/package/calendar-fastapi-react/graph-metadata> {
+  # Diese Package-Version bindet ihre Domain- und Implementation-Seite ausdrücklich.
+  <https://specforge.dev/package/calendar-fastapi-react/1.0.0>
+    a dcat:Dataset, sf:IntegrationPackage ;
+    # Diese Kennung ist der stabile Name des Integration Packages.
+    dcterms:identifier "calendar-fastapi-react" ;
+    # Diese Version pinnt genau den gezeigten Package-Inhalt.
+    dcterms:hasVersion "1.0.0" ;
+    # Diese Beziehung benennt die fachliche Calendar-Seite der Integration.
+    sf:bindsDomain <https://specforge.dev/package/calendar/1.1.0> ;
+    # Diese Beziehung benennt die technische FastAPI-React-Seite der Integration.
+    sf:bindsImplementation <https://specforge.dev/package/fastapi-react/1.0.0> .
+}
 ```
 
-Ein Integrationspaket benennt seine beiden Seiten ausdrücklich:
+Das Product pinnt Package-Versionen mit `dcterms:requires`. Der Compiler lehnt
+fehlende Versionen und abweichende Integration Bindings mit `SF1004` bis
+`SF1006` ab.
 
-```yaml
-name: calendar-fastapi-react
-version: "1.0.0"
-kind: integration
-purpose: Connects Calendar requirements to FastAPI and React patterns.
-integrates:
-  domain: {package: calendar, version: "1.1.0"}
-  implementation: {package: fastapi-react, version: "1.0.0"}
+## Concepts und Glossare
+
+`vocabulary.ttl` verwendet SKOS für Labels und Erklärungen sowie RDFS für
+formale Klassenbeziehungen. `skos:broader` ist keine Alternative zu
+`rdfs:subClassOf`: SKOS organisiert Begriffe, RDFS erzeugt formale
+Typbeziehungen.
+
+Das öffentliche Basisvokabular liegt in `vocabulary/1.0.0/specforge.ttl` und
+wird vom Compiler selbst geladen. Beziehungstexte, Controls, Operatoren und
+Verification Adapter werden dort als RDFS-/SKOS-Ressourcen gepflegt; Explorer
+und Training besitzen dafür keine zweite JSON- oder Python-Definition.
+
+```turtle
+# User ist formal eine Unterklasse von Person und erbt deren Klassifikation.
+concept:User a rdfs:Class, skos:Concept ;
+  # Diese Kennung macht den Begriff unabhängig von seinem sichtbaren Label adressierbar.
+  dcterms:identifier "User" ;
+  # Diese formale Beziehung macht jeden User zugleich zu einer Person.
+  rdfs:subClassOf concept:Person ;
+  # Dieses deutsche Label wird im Explorer angezeigt.
+  skos:prefLabel "User"@de ;
+  # Diese Definition erklärt den Begriff beim Überfahren mit der Maus.
+  skos:definition "Eine Person, die mit einer Anwendung interagiert."@de .
 ```
 
-Beide referenzierten Versionen müssen als aktive `knowledge_dependencies` des
-Produkts gepinnt sein. Der Compiler lehnt fehlende oder abweichende
-Integrationsseiten mit `SF1006` ab. Der Spec Explorer zeigt diese Rollen in
-einer eigenen Ansicht **Pakete** und zeichnet die Beziehungen explizit.
+Der Compiler leitet transitive Unterklassen, geerbte Klassifikationen,
+Typklassifikationen und Klassifikationen aus Feldern als positives Datalog ab.
+Jede Ableitung erhält PROV-Herkunft.
 
-Ein Produkt pinnt Pakete über `knowledge_dependencies` auf eine exakte Version:
+## Requirement Definitions
 
-```yaml
-knowledge_dependencies:
-  privacy: "1.0.0"
-  security: "1.0.0"
+Eine Requirement Definition ist eine `sf:RequirementDefinition` mit stabiler
+IRI, Dublin-Core-Metadaten, Control, Erwartungswert, Provenance und mindestens
+einer verpflichtenden Verification.
+
+```turtle
+# PRIVACY-001 begrenzt Responses auf die Felder des aufgelösten Resource-Schemas.
+requirement:PRIVACY-001-1.1.0 a sf:RequirementDefinition ;
+  # Diese Kennung verbindet Definition und abgeleitete Requirement Instances.
+  dcterms:identifier "PRIVACY-001" ;
+  # Diese Version pinnt die konkrete Requirement Definition.
+  dcterms:hasVersion "1.1.0" ;
+  # Dieses Control benennt die zu steuernde Systemeigenschaft.
+  sf:control <https://specforge.dev/control/response_data_minimization> ;
+  # Dieser Operator verlangt Gleichheit mit dem erwarteten Wert.
+  sf:operator <https://specforge.dev/operator/equals> ;
+  # Dieser Wert erlaubt ausschließlich deklarierte Response-Felder.
+  sf:expectedValue "declared_fields_only" ;
+  # Diese Beziehung benennt die ausführbare Prüfung der Erwartung.
+  sf:verifiedBy verification:TEST-PRIVACY-001 ;
+  # Diese Beziehung bewahrt die fachliche Herkunft der Definition.
+  prov:wasDerivedFrom source:privacy-policy-response-minimization .
 ```
 
-Beim Laden muss der Pfad existieren und `name` sowie `version` im Manifest
-müssen dem Namespace und der gepinnten Version entsprechen. Der Compiler
-berechnet zusätzlich einen SHA-256-Hash über relative Dateinamen und den
-unveränderten Inhalt aller Dateien des Paketverzeichnisses. Version und Hash
-werden in der aufgelösten Spec und später in der Evidence festgehalten. Damit
-ändert auch eine inhaltliche Änderung ohne Versionswechsel den Hash der
-aufgelösten Spec. `owner` und `purpose` sind beschreibende Metadaten; `kind`
-und `integrates` werden validiert.
+Listenwerte verwenden `sf:expectedValueList` mit einer RDF List. Dadurch bleibt
+eine fachlich relevante Reihenfolge ausdrücklich erhalten.
 
-## Die vier Knowledge-Bausteine
+Unterstützte Verification Adapter sind `http_request`, `response_schema`,
+`domain_invariant`, `audit_log` und `rate_limit`. Eine `sf:AssertionSpec`
+beschreibt deren maschinenlesbare Erwartung. SHACL prüft den Autorenvertrag;
+Pydantic ist nur noch eine interne Python-Projektion.
 
-### Concepts: Begriffe und semantische Beziehungen
+## Rules
 
-Concepts definieren eine kleine Ontologie. Ein Concept hat eine global
-eindeutige `id`, eine Version, optionale Oberbegriffe (`is_a`), optionale
-Klassifikationen und eine Quellenangabe:
+Rule-Logik liegt normativ als RIF Core XML vor. `rules.ttl` enthält Identität,
+Version und PROV-Quelle. Der Compiler importiert die unterstützte RIF-Core-
+Teilmenge und wertet sie als sicheres positives Datalog bis zum kleinsten
+Fixpunkt aus.
 
-```yaml
-id: User
-version: "1.0.0"
-is_a: [Person]
-source:
-  type: internal_taxonomy
-  document: privacy-concepts
-  version: "1.0.0"
-  section: user
+- Jede Head-Variable muss positiv gebunden sein.
+- Variable Prädikate sind verboten.
+- Globale Negation ist verboten.
+- Alternativen werden als mehrere positive RIF-Implikationen dargestellt.
+- Remote RIF Imports sind verboten.
+
+Der Export enthält XML-Lernkommentare. Eine generierte Datalog-/Prolog-Ansicht
+darf die Rule verständlicher anzeigen, ist aber keine zweite Quelle.
+
+## Implementation Patterns
+
+Patterns sind `sf:ImplementationPattern`. Sie referenzieren Requirements,
+Stack, Control Bindings, Verifications und betroffene Artefakte über RDF:
+
+```turtle
+# Dieses Pattern realisiert die Response-Minimierung im FastAPI-Stack.
+pattern:fastapi-declared-response-schema a sf:ImplementationPattern ;
+  # Diese Kennung ist der stabile Name des technischen Patterns.
+  dcterms:identifier "fastapi/declared-response-schema" ;
+  # Diese Beziehung begrenzt das Pattern auf den FastAPI-React-Stack.
+  sf:usesStack stack:fastapi-react ;
+  # Diese Beziehung benennt das vom Pattern adressierte Requirement.
+  sf:satisfies requirement:PRIVACY-001 ;
+  # Dieses Binding realisiert den konkreten erwarteten Control-Wert.
+  sf:controlBinding binding:response-data-minimization ;
+  # Diese Beziehung verbindet das Pattern mit seiner ausführbaren Prüfung.
+  sf:verifiedBy verification:TEST-PRIVACY-001 .
 ```
 
-Der Compiler lehnt unbekannte Oberbegriffe, doppelte Concept-IDs und Zyklen in
-`is_a` ab. Anschließend bildet er die semantische Hülle. Dabei werden
+Ein Pattern entscheidet nicht, ob ein Requirement gilt. Erst die Rule erzeugt
+eine Requirement Instance; danach muss genau ein Stack-kompatibles Pattern alle
+Controls und Verifications adressieren. Kein Treffer ergibt `SF1501`, mehrere
+Treffer `SF1502`.
 
-- transitive `is_a`-Beziehungen,
-- geerbte Klassifikationen,
-- Klassifikationen eines Feldes aus dessen Typ und
-- Klassifikationen einer Entität aus ihren Feldern
+## Auflösung
 
-als neue Fakten hergeleitet. Jedes hergeleitete Faktum nennt seine Prämissen
-und die verwendete Ableitung. Diese Herkunft landet in `trace.json` und
-`semantic-facts.json`.
+`uv run specforge resolve products/calendar` führt aus:
 
-### Requirements: entscheidbare Erwartungen
+1. `product.trig` und alle `package.trig` lokal parsen,
+2. Autorenquellen mit SHACL Core validieren,
+3. SKOS/RDFS-Concepts, Requirements und Patterns laden,
+4. RIF Core in sicheres positives Datalog normalisieren,
+5. Product-Aussagen und semantische Hülle bis zum Fixpunkt auswerten,
+6. Requirement Instances erzeugen und Patterns auswählen,
+7. das Resolved Dataset erneut mit SHACL validieren,
+8. PROV-O-Herkunft ergänzen,
+9. per RDFC-1.0 kanonisieren und mit SHA-256 hashen.
 
-Eine Requirement-Datei ist die kanonische Definition einer Erwartung:
+Package-Hashes beruhen ebenfalls auf kanonischem RDF plus normalisierter
+RIF-Semantik. Kommentare, Dateireihenfolge und Turtle-Layout verändern sie
+nicht; fachliche Aussagen schon.
 
-```yaml
-id: PRIVACY-001
-version: "1.0.0"
-statement: API responses expose only fields declared by the resolved resource schema.
-expectation:
-  control: response_data_minimization
-  operator: equals
-  value: declared_fields_only
-verifications:
-  - id: TEST-PRIVACY-001
-    adapter: response_schema
-    setup: owner_read
-    assertion:
-      response_fields_from: resolved_resource_schema
-source:
-  type: internal_policy
-  document: privacy-policy
-  version: "1.0.0"
-  section: response-minimization
+## Sicherheit
+
+- kein Netzwerkzugriff und keine Graphdatenbank,
+- keine Remote JSON-LD Contexts,
+- kein automatisches Remote-`owl:imports`,
+- kein SPARQL `SERVICE`,
+- kein SWRL,
+- kein aktives OWL-2-RL-Profil,
+- keine SHACL Advanced Features.
+
+## Migration alter Quellen
+
+Alte YAML-Quellen sind nur Eingabe des getrennten Migrationsbefehls:
+
+```powershell
+uv run specforge migrate-format legacy/product.yaml --to trig --output migrated/product.trig
+uv run specforge migrate-format legacy/privacy-package --to trig --output migrated/privacy
 ```
 
-`expectation` ist der Sollwert eines Controls. Aktuell ist nur der Operator
-`equals` erlaubt. Jede Definition braucht mindestens eine Verification und
-mindestens eine davon muss verpflichtend sein (`mandatory` ist standardmäßig
-`true`). Unterstützte Adapter sind `http_request`, `response_schema`,
-`domain_invariant`, `audit_log` und `rate_limit`. Eine Assertion muss mindestens
-ein ausführbares, vom Datenmodell unterstütztes Feld enthalten. Unbekannte
-Felder werden in allen Knowledge-Modellen abgewiesen.
-`response_fields_from: resolved_resource_schema` ist eine symbolische,
-app-unabhängige Erwartung. Der Verifier folgt vom Target zur `returns`-Entität
-und leitet die erlaubten Feldnamen aus der aufgelösten Product Spec ab. Ein
-optionales `response_name` am Feld beschreibt ein explizites API-Alias wie
-`owner` → `owner_id`. Beobachtete Response-Felder dürfen eine Teilmenge der
-deklarierten Felder sein, aber keine zusätzlichen Felder enthalten; alle nicht
-optionalen Felder müssen vorhanden sein.
-
-Die `statement`-Texte in `product.yaml` sind lesbare Produktdeklarationen. Für
-die aufgelöste Instanz gelten jedoch Statement, Version, Erwartung, Quelle und
-Verifications aus der zentralen Requirement-Definition.
-
-### Rules: wann ein Requirement gilt
-
-Regeln matchen deklarativ gegen Fakten und erzeugen Requirement-Instanzen:
-
-```yaml
-id: security/authenticated-personal-data
-version: "1.0.0"
-when:
-  all:
-    - fact: {subject: "$operation", predicate: acts_on, object: "$resource"}
-    - fact: {subject: "$resource", predicate: contains_classification, object: PersonalData}
-then:
-  requirement: SEC-001
-  target: "$operation"
-source:
-  type: internal_policy
-  document: security-policy
-  version: "1.0.0"
-  section: authenticated-personal-data
-```
-
-Die eingeschränkte DSL kennt `fact`, `all`, `any` und `equals`. Ein mit
-`$` beginnender Wert ist eine Variable; die erste passende Tatsache bindet sie,
-weitere Bedingungen müssen dieselbe Bindung erfüllen. Die Auswertung ist
-als sicheres positives Datalog bis zum kleinsten Fixpunkt seiteneffektfrei.
-`not` ist wegen RDFs Open-World-Semantik nicht unterstützt; Ausnahmen werden
-als positive `any`-Alternativen formuliert. `then.requirement` muss auf eine geladene Definition zeigen;
-`then.target` darf eine gebundene Variable verwenden. Doppelte Regel-IDs sind
-in Kombination mit ihrer Version verboten.
-
-Eine abgeleitete Instanz speichert Regel-ID und -Version, Variablenbindungen
-und die IDs aller verwendeten Fakten. Treffen mehrere Ableitungen auf dasselbe
-Paar aus Requirement und Target zu, werden sie in einer Instanz konsolidiert.
-
-### Patterns: wie eine Erwartung umgesetzt werden kann
-
-Patterns verbinden eine Requirement-Instanz mit einer kompatiblen Umsetzung.
-Sie liegen in einem Implementierungspaket, nicht im Policy-Paket:
-
-```yaml
-id: fastapi/declared-response-schema
-version: "1.0.0"
-satisfies: [PRIVACY-001]
-stack: fastapi-react
-controls: {response_data_minimization: declared_fields_only}
-verifications: [TEST-PRIVACY-001]
-artifacts: [backend/app.py]
-```
-
-Der Compiler berücksichtigt nur Patterns für den in der Product Identity
-deklarierten Stack. Genau ein Pattern muss den Control-Wert der Instanz
-adressieren und alle Verification-IDs der Definition aufführen. Kein Treffer
-ergibt `SF1501`, mehrere Treffer ergeben `SF1502`. Neben der gezeigten Form
-unterstützt das Modell eine explizite
-`addresses`-Beschreibung sowie Metadaten wie Kompatibilitäten, Abhängigkeiten,
-Constraints, Empfehlungen, Beispiele und Skills. Enthält ein Artifact- oder
-Beispielpfad das Wort `template`, wird das Pattern abgewiesen. Gibt es für eine
-Instanz kein kompatibles Pattern, bricht das Auflösen mit `SF1501` ab.
-
-## Was beim Auflösen passiert
-
-`uv run specforge resolve products/calendar` führt diese Schritte aus:
-
-1. Die Product Spec wird strikt validiert und alle gepinnten Pakete werden in
-   sortierter Reihenfolge geladen und gehasht.
-2. Product-Entitäten, Felder und Operationen werden in atomare Fakten wie
-   `has_field`, `has_type`, `classified_as`, `acts_on`, `returns` und `scope`
-   normalisiert. `acts_on` bezeichnet die bearbeitete Ressource; `returns` wird
-   nur für eine tatsächliche Response-Entität erzeugt.
-3. Concepts ergänzen diese Fakten durch die semantische Hülle.
-4. Explizit in `declared_requirements` genannte Requirements werden direkt für
-   die dort genannte Operation instanziiert.
-5. Rules werden gegen alle Fakten ausgewertet und erzeugen weitere, begründete
-   Requirement-Instanzen.
-6. Für jede Instanz wird genau ein zum Product-Stack kompatibles Pattern aus
-   dem Implementierungspaket ausgewählt.
-7. Expectations werden pro Target und Control konsolidiert. Fordern zwei
-   Instanzen unterschiedliche Werte für dasselbe Control desselben Targets,
-   stoppt der Compiler mit `SF1301` und nennt Requirements, Regeln und
-   Paketversionen.
-8. Das Ergebnis wird kanonisch sortiert und gehasht. Geschrieben werden
-   `normalized-product.json`, `normalized-facts.json`, `semantic-facts.json`,
-   `trace.json` und `resolved-spec.json` unter `generated/<product>/`.
-
-Alle aufgelösten Requirements beginnen mit dem Status `REQUIRED`. Erst
-`specforge validate` führt ihre Verification Adapter aus. Die daraus erzeugte
-Evidence bindet Beobachtungen an den Hash der aufgelösten Spec, den Git-Stand
-und die exakten Knowledge-Paketversionen und -Hashes.
-
-## Nachvollziehen und Ändern
-
-Warum ein Requirement gilt, zeigt `explain` einschließlich Regeln, Fakten und
-deren Herkunft:
-
-```bash
-uv run specforge explain SEC-001 --product products/calendar
-uv run specforge explain SEC-001 --product products/calendar --target operation:read_event
-uv run specforge explain SEC-001 --product products/calendar --group-by resource
-```
-
-Eine Knowledge-Änderung sollte als neue semantische Paketversion unter einem
-neuen Verzeichnis veröffentlicht und anschließend in
-`knowledge_dependencies` gepinnt werden. `resolve` ist zugleich die praktische
-Paketvalidierung: Es erkennt unter anderem Schemafehler, fehlende Referenzen,
-Concept-Zyklen, doppelte IDs, nicht ausführbare Requirements, fehlende Patterns
-und widersprüchliche Controls. Danach sollten mindestens `resolve` und die
-Tests ausgeführt werden; bei geänderter Verifikation zusätzlich `validate`.
+Der Befehl überschreibt die Quelle nicht. Er importiert und lintet sein Ergebnis
+erneut und schreibt daneben einen `migration-report.json`. Der normale
+Compilerpfad akzeptiert keine fachlichen YAML-Dateien mehr.

@@ -1,0 +1,55 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# PLATFORM-001 begrenzt authentifizierte Event-Lesezugriffe auf sechzig Anfragen pro Minute.
+requirement:PLATFORM-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PLATFORM-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Authenticated event reads are limited to sixty requests per minute."@en ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft.
+  sf:control <https://specforge.dev/control/rate_limit> ;
+  # Diese Aussage legt den Vergleichsoperator der Erwartung fest.
+  sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue 60 ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-PLATFORM-001 ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:platform-policy-traffic .
+
+# Diese Verification beobachtet die wirksame Rate Limit für authentifizierte Reads.
+verification:TEST-PLATFORM-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PLATFORM-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/rate_limit> ;
+  # Diese Aussage beschreibt die Vorbereitung der Verification.
+  sf:setup "authenticated_reads" ;
+  # Diese Aussage kennzeichnet einen verpflichtenden Vorbereitungsschritt.
+  sf:mandatory true ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Behauptung.
+  sf:assertion assertion:TEST-PLATFORM-001 .
+
+# Diese Assertion erwartet höchstens sechzig Requests pro Minute.
+assertion:TEST-PLATFORM-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:maxRequestsPerMinute 60 .
+
+# Diese Quelle verweist auf den Traffic-Abschnitt der Platform Policy.
+source:platform-policy-traffic a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "platform-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "traffic" .

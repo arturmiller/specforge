@@ -22,7 +22,10 @@ uv run specforge report products/calendar
 uv run specforge visualize products/calendar
 uv run specforge sparql products/calendar --query query.rq
 uv run specforge export-rif products/calendar --output rules.rif
+uv run specforge export-prolog products/calendar --output rules.prolog
 uv run specforge rdf-check generated/calendar/resolved-spec.jsonld
+uv run specforge rif-check knowledge/privacy/1.1.0/rules.rif.xml
+uv run specforge lint-comments products/calendar
 ```
 
 `visualize` writes a self-contained interactive Spec Explorer to
@@ -63,6 +66,14 @@ How Knowledge packages are structured and how the compiler turns them into
 facts, requirements, patterns, and evidence is described in
 [Knowledge in SpecForge](docs/knowledge.md).
 
+Product und Knowledge werden fachlich in TriG, Turtle und RIF Core geschrieben;
+gespeicherte Abfragen sind normale SPARQL-`.rq`-Dateien. SHACL beschreibt den
+öffentlichen Autorenvertrag. Unmittelbare Lernkommentare erklären jede Aussage,
+damit die Standardsprachen direkt in den Quelldateien erlernbar bleiben. YAML
+ist nur noch Eingabe des getrennten, expliziten `migrate-format`-Befehls.
+
 The implemented Semantic Web foundation is specified in
 [Semantic-Web-Grundlage für SpecForge](docs/semantic-web-spec.md); the executable
 coverage is tracked in the [Semantic Web conformance matrix](docs/semantic-web-conformance.md).
+Die verbindliche Formatmigration beschreibt die
+[Spec für standardbasierte Autorenformate](docs/standard-authoring-formats-spec.md).

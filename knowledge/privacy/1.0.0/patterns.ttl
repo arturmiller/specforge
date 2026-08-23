@@ -1,0 +1,32 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix pattern: <https://specforge.dev/pattern/> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix stack: <https://specforge.dev/stack/> .
+@prefix binding: <https://specforge.dev/control-binding/> .
+@prefix constraint: <https://specforge.dev/constraint/> .
+
+# Dieses Pattern beschreibt die technische Umsetzung fastapi/declared-response-schema.
+pattern:fastapi-declared-response-schema a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/declared-response-schema" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage verbindet das Product mit seinem technischen Stack.
+  sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:PRIVACY-001 ;
+  # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+  sf:controlBinding binding:fastapi-declared-response-schema-response_data_minimization ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-PRIVACY-001 ;
+  # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+  sf:artifact "backend/app.py" .
+
+# Dieses Binding verlangt für response_data_minimization den vom Requirement erwarteten Wert.
+binding:fastapi-declared-response-schema-response_data_minimization a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/response_data_minimization> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "declared_fields_only" .

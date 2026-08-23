@@ -1,0 +1,18 @@
+# Liefert Product, Entities, Fields und Operationen für die Product-Modellansicht.
+SELECT ?product ?entity ?operation ?field WHERE {
+  # Das Product ist der Ausgangspunkt der Modellübersicht.
+  GRAPH <https://specforge.dev/graph/product> {
+    # Diese Typaussage findet die Product-Ressource.
+    ?product a sf:Product .
+    # Optional verbundene Entities erscheinen auch dann, wenn sie keine Fields besitzen.
+    OPTIONAL {
+      # defines verbindet das Product mit einer fachlichen Entity.
+      ?product sf:defines ?entity .
+      # Optional verbundene Fields werden ihrer Entity zugeordnet.
+      OPTIONAL { ?entity sf:hasField ?field . }
+    }
+    # Optional verbundene Operationen werden dem Product zugeordnet.
+    OPTIONAL { ?product sf:offers ?operation . }
+  }
+}
+ORDER BY ?entity ?field ?operation

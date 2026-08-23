@@ -1,0 +1,8 @@
+# Zeigt die Beziehungen zwischen Package-Versionen und benennt die Art jeder Beziehung.
+SELECT ?source ?target ?relation WHERE {
+  # Diese drei Prädikate sind die für die Package-Übersicht relevanten Beziehungen.
+  VALUES ?relation { dcterms:requires sf:bindsDomain sf:bindsImplementation }
+  # Eine gefundene Aussage verbindet das Quell-Package über die Beziehung mit dem Ziel-Package.
+  GRAPH ?graph { ?source ?relation ?target . }
+}
+ORDER BY ?source ?relation ?target

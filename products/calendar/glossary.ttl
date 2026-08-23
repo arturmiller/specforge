@@ -1,0 +1,35 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix glossary: <https://specforge.dev/product/calendar/glossary/> .
+
+# Dieses Scheme enthält die Begriffe, die nur das Calendar-Produkt näher erklärt.
+glossary:scheme a skos:ConceptScheme ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar" .
+
+# Event bezeichnet einen fachlichen Kalendereintrag und nicht bloß ein technisches Ereignis.
+glossary:Event a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme glossary:scheme ;
+  # Diese Aussage legt den bevorzugten sichtbaren Begriffsnamen fest.
+  skos:prefLabel "Event"@de ;
+  # Diese Aussage erklärt die Bedeutung des Glossarbegriffs.
+  skos:definition "Eine fachliche Entität für einen Kalendereintrag mit Eigentümer, Inhalt und Zeitintervall."@de .
+
+# User bezeichnet die Person, die eigene Events über die Calendar-Operationen verwaltet.
+glossary:User a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme glossary:scheme ;
+  # Diese Aussage legt den bevorzugten sichtbaren Begriffsnamen fest.
+  skos:prefLabel "User"@de ;
+  # Diese Aussage erklärt die Bedeutung des Glossarbegriffs.
+  skos:definition "Eine Person, die Calendar verwendet und eigene Events erstellen, lesen, ändern und löschen kann."@de .
+
+# PersonalData kennzeichnet Daten, deren Personenbezug zusätzliche Schutzmaßnahmen auslöst.
+glossary:PersonalData a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme glossary:scheme ;
+  # Diese Aussage legt den bevorzugten sichtbaren Begriffsnamen fest.
+  skos:prefLabel "PersonalData"@de ;
+  # Diese Aussage erklärt die Bedeutung des Glossarbegriffs.
+  skos:definition "Eine Klassifikation für Daten, die sich auf eine Person beziehen und deshalb besondere Schutzmaßnahmen auslösen."@de .

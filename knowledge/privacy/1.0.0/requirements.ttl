@@ -1,0 +1,67 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# PRIVACY-001 beschreibt die überprüfbare Erwartung: API responses expose only fields declared by the resolved resource schema.
+requirement:PRIVACY-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PRIVACY-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "API responses expose only fields declared by the resolved resource schema." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/response_data_minimization> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "declared_fields_only" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PRIVACY-001 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:privacy-policy-response-minimization .
+
+# Diese Verification führt TEST-PRIVACY-001 mit dem Adapter response_schema aus.
+verification:TEST-PRIVACY-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PRIVACY-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/response_schema> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "owner_read" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-PRIVACY-001 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-PRIVACY-001.
+assertion:TEST-PRIVACY-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "description" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "end" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "id" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "location" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "owner_id" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "start" ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseField "title" .
+
+# Diese Quelle bezeichnet den normativen Abschnitt response-minimization in privacy-policy.
+source:privacy-policy-response-minimization a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "privacy-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "response-minimization" .

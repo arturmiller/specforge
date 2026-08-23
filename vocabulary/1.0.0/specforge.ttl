@@ -3,27 +3,797 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix control: <https://specforge.dev/control/> .
+@prefix operator: <https://specforge.dev/operator/> .
+@prefix adapter: <https://specforge.dev/verification-adapter/> .
+@prefix terms: <https://specforge.dev/terms/> .
 
+# Diese Ressource bezeichnet die versionierte Ausgabe des SpecForge-Vokabulars.
 <https://specforge.dev/vocab/1.0.0> a owl:Ontology ;
+  # Diese Angabe veröffentlicht die Version des SpecForge-Vokabulars.
   owl:versionInfo "1.0.0" .
 
-sf:Product a rdfs:Class ; rdfs:label "Product"@de .
-sf:Entity a rdfs:Class ; rdfs:label "Entity"@de .
-sf:Operation a rdfs:Class ; rdfs:label "Operation"@de .
-sf:RequirementDefinition a rdfs:Class ; rdfs:label "Requirement Definition"@de .
-sf:RequirementInstance a rdfs:Class ; rdfs:label "Requirement Instance"@de .
-sf:Rule a rdfs:Class ; rdfs:label "Rule"@de .
-sf:ImplementationPattern a rdfs:Class ; rdfs:label "Implementation Pattern"@de .
-sf:Verification a rdfs:Class ; rdfs:label "Verification"@de .
-sf:Assertion a rdfs:Class ; rdfs:label "Assertion"@de .
+# Ein Product ist die konkrete Anwendung, die mit Knowledge verschnitten wird.
+sf:Product a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Product"@de .
 
-sf:actsOn a rdf:Property ; rdfs:label "bearbeitet"@de ;
+# Eine Entity ist ein fachlicher Gegenstand mit adressierbaren Feldern.
+sf:Entity a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Entity"@de .
+
+# Eine Operation ist eine ausführbare Aktion des Products.
+sf:Operation a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Operation"@de .
+
+# Eine Requirement Definition beschreibt eine allgemeine, noch nicht angewendete Pflicht.
+sf:RequirementDefinition a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Requirement Definition"@de .
+
+# Eine Requirement Instance wendet eine Definition auf genau ein konkretes Target an.
+sf:RequirementInstance a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Requirement Instance"@de .
+
+# Eine Rule leitet aus bekannten Facts die Anwendbarkeit eines Requirements ab.
+sf:Rule a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Rule"@de .
+
+# Ein Implementation Pattern beschreibt eine passende technische Realisierung.
+sf:ImplementationPattern a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Implementation Pattern"@de .
+
+# Eine Verification vergleicht eine konkrete Beobachtung mit einer Erwartung.
+sf:Verification a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Verification"@de .
+
+# Eine Assertion macht eine einzelne Aussage adressierbar und herleitbar.
+sf:Assertion a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Assertion"@de .
+
+# Ein Field ist eine adressierbare Eigenschaft einer Entity.
+sf:Field a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Field"@de .
+
+# Eine Declared Requirement verknüpft eine Product-Erklärung unmittelbar mit einem Target.
+sf:DeclaredRequirement a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Declared Requirement"@de .
+
+# Ein Control Binding verbindet ein Pattern mit einem erwarteten Control-Wert.
+sf:ControlBinding a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Control Binding"@de .
+
+# Eine Assertion Spec beschreibt die maschinenlesbare Erwartung einer Verification.
+sf:AssertionSpec a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Assertion Spec"@de .
+
+# Eine Pattern Constraint beschreibt eine erforderliche oder verbotene Umsetzungseigenschaft.
+sf:PatternConstraint a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Pattern Constraint"@de .
+
+# Ein Control Binding legt den konkreten Wert fest, mit dem ein Pattern ein Control realisiert.
+sf:ControlBinding a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Control Binding"@de .
+
+# Ein Policy Package enthält app-unabhängige Erwartungen und Rules.
+sf:PolicyPackage a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Policy Package"@de .
+
+# Ein Domain Package enthält Wissen über eine fachliche Domäne.
+sf:DomainPackage a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Domain Package"@de .
+
+# Ein Implementation Package enthält wiederverwendbare technische Patterns.
+sf:ImplementationPackage a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Implementation Package"@de .
+
+# Ein Integration Package verbindet genau eine Domain mit einer Implementation.
+sf:IntegrationPackage a rdfs:Class ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "Integration Package"@de .
+
+# actsOn verbindet eine Operation mit der Ressource, die sie fachlich bearbeitet.
+sf:actsOn a rdf:Property ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "bearbeitet"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
   rdfs:comment "Die Operation bearbeitet diese Ressource."@de .
-sf:returns a rdf:Property ; rdfs:label "liefert"@de ;
+
+# returns verbindet eine Operation mit der Entity ihrer Response-Repräsentation.
+sf:returns a rdf:Property ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
+  rdfs:label "liefert"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
   rdfs:comment "Die Operation gibt eine Repräsentation dieser Entität zurück."@de .
-sf:bindsDomain a rdf:Property ; rdfs:subPropertyOf dcterms:relation ;
+
+# bindsDomain benennt die fachliche Seite, die ein Integration Package verbindet.
+sf:bindsDomain a rdf:Property ;
+  # Diese Aussage ordnet die Beziehung einer allgemeineren Beziehung unter.
+  rdfs:subPropertyOf dcterms:relation ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
   rdfs:label "verbindet Domäne"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
   rdfs:comment "Das Integrationspaket verbindet Patterns mit dieser fachlichen Domäne."@de .
-sf:bindsImplementation a rdf:Property ; rdfs:subPropertyOf dcterms:relation ;
+
+# bindsImplementation benennt die technische Seite, die ein Integration Package verbindet.
+sf:bindsImplementation a rdf:Property ;
+  # Diese Aussage ordnet die Beziehung einer allgemeineren Beziehung unter.
+  rdfs:subPropertyOf dcterms:relation ;
+  # Diese Aussage legt den verständlichen Anzeigenamen fest.
   rdfs:label "verbindet Implementierung"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
   rdfs:comment "Das Integrationspaket verwendet diesen technischen Stack."@de .
+
+# defines verbindet ein Product mit den von ihm deklarierten Entities.
+sf:defines a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "definiert"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Product definiert diese fachliche Ressource."@de .
+
+# offers verbindet ein Product mit seinen ausführbaren Operationen.
+sf:offers a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "bietet an"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Product bietet diese Operation an."@de .
+
+# hasField verbindet eine Entity mit einem ihrer Felder.
+sf:hasField a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "besitzt Feld"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Entity besitzt dieses adressierbare Feld."@de .
+
+# valueType benennt den fachlichen oder technischen Datentyp eines Feldes.
+sf:valueType a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Typ"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Feld verwendet diesen Wertetyp."@de .
+
+# classifiedAs verbindet eine Ressource mit einer formalen Klassifikation.
+sf:classifiedAs a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "klassifiziert als"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource trägt diese Klassifikation."@de .
+
+# action benennt die positive Aktion einer Operation.
+sf:action a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Aktion"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Operation führt diese Aktion aus."@de .
+
+# actor benennt die handelnde Entity einer Operation.
+sf:actor a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Actor"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Diese Entity führt die Operation aus."@de .
+
+# scope beschreibt den fachlichen Geltungsbereich einer Operation.
+sf:scope a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Scope"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Operation ist auf diesen Geltungsbereich begrenzt."@de .
+
+# usesStack verbindet Product oder Pattern mit einem technischen Stack.
+sf:usesStack a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "verwendet Stack"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource verwendet diesen technischen Stack."@de .
+
+# declaresRequirement verbindet ein Product mit einer unmittelbaren Requirement-Deklaration.
+sf:declaresRequirement a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "deklariert Requirement"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Product erklärt dieses Requirement unmittelbar für ein Target."@de .
+
+# requirement verweist von einer Deklaration auf die allgemeine Requirement Definition.
+sf:requirement a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "referenziert Requirement"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource verweist auf diese Requirement Definition."@de .
+
+# appliesTo verbindet eine Requirement-Ressource mit ihrem konkreten Target.
+sf:appliesTo a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "gilt für"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Requirement gilt für dieses Target."@de .
+
+# control benennt die gesteuerte Systemeigenschaft.
+sf:control a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "steuert"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Erwartung steuert dieses Control."@de .
+
+# expectedValue enthält einen einzelnen erwarteten Control- oder Beobachtungswert.
+sf:expectedValue a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Wert"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource erwartet diesen einzelnen Wert."@de .
+
+# expectedValueList enthält eine geordnete Liste erwarteter Werte.
+sf:expectedValueList a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Werteliste"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource erwartet diese geordnete Werteliste."@de .
+
+# verifiedBy verbindet Requirement oder Pattern mit einer Verification.
+sf:verifiedBy a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "geprüft durch"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Diese Verification prüft die bezeichnete Erwartung."@de .
+
+# implementedBy verbindet eine Requirement Instance mit ihrem ausgewählten Umsetzungsmuster.
+sf:implementedBy a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "umgesetzt durch"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Dieses Implementation Pattern setzt die konkrete Requirement Instance um."@de .
+
+# satisfies verbindet ein Pattern mit einer Requirement Definition.
+sf:satisfies a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erfüllt"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Pattern adressiert diese Requirement Definition."@de .
+
+# controlBinding verbindet ein Pattern mit einem konkreten Control Binding.
+sf:controlBinding a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "bindet Control"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Pattern realisiert diesen Control-Wert."@de .
+
+# artifact benennt eine durch ein Pattern betroffene Softwaredatei.
+sf:artifact a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "betrifft Artefakt"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Pattern betrifft dieses Softwareartefakt."@de .
+
+# relation beschreibt die fachliche Art einer Verbindung zwischen zwei Feldern oder Ressourcen.
+sf:relation a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Beziehung"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Ressource verwendet diese benannte fachliche Beziehung."@de .
+
+# optional kennzeichnet ein Feld, das in einer Instanz fehlen darf.
+sf:optional a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "ist optional"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Feld muss nicht in jeder Instanz vorhanden sein."@de .
+
+# responseName benennt den extern sichtbaren Namen eines Feldes in einer Response.
+sf:responseName a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "heißt in Response"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Response verwendet diesen Namen für das Feld."@de .
+
+# operator benennt den Vergleich, mit dem ein erwarteter Control-Wert geprüft wird.
+sf:operator a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "verwendet Operator"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Erwartung vergleicht den beobachteten Wert mit diesem Operator."@de .
+
+# verificationAdapter benennt den ausführbaren Adapter einer Verification.
+sf:verificationAdapter a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "verwendet Prüfadapter"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Dieser Adapter führt die Verification gegen die Anwendung aus."@de .
+
+# setup beschreibt die notwendigen Vorbedingungen einer Verification.
+sf:setup a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "benötigt Vorbereitung"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Diese Vorbereitung muss vor der Verification ausgeführt werden."@de .
+
+# mandatory kennzeichnet einen verpflichtenden Setup-Schritt.
+sf:mandatory a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "ist verpflichtend"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Der bezeichnete Schritt darf bei der Verification nicht ausgelassen werden."@de .
+
+# assertion verbindet eine Verification mit ihrer maschinenprüfbaren Behauptung.
+sf:assertion a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "prüft Aussage"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Verification entscheidet über diese konkrete Behauptung."@de .
+
+# responseStatus legt den erwarteten HTTP-Status einer Verification fest.
+sf:responseStatus a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Response-Status"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die beobachtete HTTP-Response muss diesen Status besitzen."@de .
+
+# responseField legt ein erwartetes einzelnes Feld einer Response fest.
+sf:responseField a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Response-Feld"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die beobachtete Response muss dieses Feld enthalten."@de .
+
+# responseFieldsFrom verweist auf die Ressource, welche die erlaubten Response-Felder deklariert.
+sf:responseFieldsFrom a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "übernimmt Response-Felder von"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Nur die von dieser Ressource deklarierten Felder dürfen ausgegeben werden."@de .
+
+# invariant benennt eine Bedingung, die vor und nach einer Operation wahr bleiben muss.
+sf:invariant a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erfüllt Invariante"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Verification prüft diese dauerhaft geltende Bedingung."@de .
+
+# storedMatches verlangt Übereinstimmung zwischen gespeichertem und erwartetem Wert.
+sf:storedMatches a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "gespeicherter Wert entspricht"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Der gespeicherte Wert muss der bezeichneten Erwartung entsprechen."@de .
+
+# resourceMatches verlangt Übereinstimmung zwischen Response-Ressource und Target-Ressource.
+sf:resourceMatches a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "Ressource entspricht"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die beobachtete Ressource muss der bezeichneten Target-Ressource entsprechen."@de .
+
+# afterStatus legt den erwarteten Status nach Ausführung einer Operation fest.
+sf:afterStatus a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Status danach"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Nach der Operation muss die Ressource diesen Status besitzen."@de .
+
+# auditEvent benennt das erwartete Ereignis im Audit Trail.
+sf:auditEvent a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erwartet Audit-Ereignis"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Operation muss dieses Ereignis nachvollziehbar protokollieren."@de .
+
+# maxRequestsPerMinute legt die höchstens erlaubte Anfragerate fest.
+sf:maxRequestsPerMinute a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "erlaubt Anfragen pro Minute"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Pro Minute dürfen höchstens so viele Anfragen akzeptiert werden."@de .
+
+# constraint verbindet ein Pattern mit einer maschinenentscheidbaren Einschränkung.
+sf:constraint a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Einschränkung"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Das Pattern ist nur anwendbar, wenn diese Einschränkung erfüllt ist."@de .
+
+# constraintKind klassifiziert die Art einer Pattern-Einschränkung.
+sf:constraintKind a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Einschränkungsart"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Diese Art bestimmt, wie eine Pattern-Einschränkung ausgewertet wird."@de .
+
+# recommendation enthält einen redaktionellen Umsetzungshinweis eines Patterns.
+sf:recommendation a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "empfiehlt"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Dieser Text erläutert eine empfohlene Umsetzung des Patterns."@de .
+
+# sourceType beschreibt die Art einer lokalen Provenienzquelle.
+sf:sourceType a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "hat Quellart"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Die Herkunftsquelle gehört zu dieser redaktionellen oder normativen Art."@de .
+
+# sourceSection benennt den relevanten Abschnitt innerhalb einer Provenienzquelle.
+sf:sourceSection a rdf:Property ;
+  # Diese Aussage legt einen verständlichen Anzeigenamen fest.
+  rdfs:label "stammt aus Abschnitt"@de ;
+  # Diese Aussage erklärt die wiederverwendbare fachliche Bedeutung.
+  rdfs:comment "Diese Abschnittsangabe lokalisiert die fachliche Aussage in ihrer Quelle."@de .
+
+# Dieses SKOS-Schema gruppiert alle wiederverwendbaren SpecForge Controls.
+terms:controls a skos:ConceptScheme ;
+  # Diese Kennung wird in Glossar-Views als Schemaname angezeigt.
+  dcterms:identifier "controls" .
+
+# Dieses SKOS-Schema gruppiert die unterstützten Verification Adapter.
+terms:verification-adapters a skos:ConceptScheme ;
+  # Diese Kennung wird in Glossar-Views als Schemaname angezeigt.
+  dcterms:identifier "verification-adapters" .
+
+# Dieses SKOS-Schema gruppiert die entscheidbaren Vergleichsoperatoren.
+terms:operators a skos:ConceptScheme ;
+  # Diese Kennung wird in Glossar-Views als Schemaname angezeigt.
+  dcterms:identifier "operators" .
+
+# Dieses Control verlangt eine begrenzte Zahl akzeptierter Anfragen pro Zeitfenster.
+control:rate_limit a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Anfragerate begrenzen"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Begrenzt, wie viele Anfragen eine Anwendung innerhalb eines Zeitfensters akzeptiert."@de .
+
+# Dieses Control verlangt eine nachgewiesene Identität vor geschütztem Zugriff.
+control:authentication a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Authentifizierung"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Verlangt, dass eine handelnde Person ihre Identität vor dem Zugriff nachweist."@de .
+
+# Dieses Control begrenzt Zugriffe anhand fachlicher Berechtigungen.
+control:authorization a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Autorisierung"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Entscheidet nach erfolgreicher Identifikation, welche Ressource eine Person verwenden darf."@de .
+
+# Dieses Control verlangt nachvollziehbare Ereignisse für relevante Zugriffe.
+control:audit_events a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Audit-Ereignisse"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Zeichnet sicherheitsrelevante Zugriffsentscheidungen als nachvollziehbare Ereignisse auf."@de .
+
+# Dieses Control begrenzt ausgegebene Daten auf ausdrücklich deklarierte Felder.
+control:response_data_minimization a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Datenminimierung der Response"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Gibt in einer Response nur die für die Ressource ausdrücklich deklarierten Felder aus."@de .
+
+# Dieses Control verlangt ein fachlich gültiges zeitliches Intervall.
+control:event_time_interval a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Gültiges Event-Zeitintervall"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Verlangt, dass das Ende eines Events zeitlich nach seinem Beginn liegt."@de .
+
+# Dieses Control beschreibt das erwartete Erstellen eines Calendar Events.
+control:event_create a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Event erstellen"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Steuert das Anlegen eines neuen Calendar Events."@de .
+
+# Dieses Control beschreibt das erwartete Lesen eines Calendar Events.
+control:event_read a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Event lesen"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Steuert das Abrufen eines vorhandenen Calendar Events."@de .
+
+# Dieses Control beschreibt das erwartete Ändern eines Calendar Events.
+control:event_update a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Event ändern"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Steuert das Aktualisieren eines vorhandenen Calendar Events."@de .
+
+# Dieses Control beschreibt das erwartete Löschen eines Calendar Events.
+control:event_delete a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:controls ;
+  # Dieses Label benennt das Control verständlich.
+  skos:prefLabel "Event löschen"@de ;
+  # Diese Definition erklärt die konkret gesteuerte Systemeigenschaft.
+  skos:definition "Steuert das Entfernen eines vorhandenen Calendar Events."@de .
+
+# Dieser Operator verlangt Gleichheit von beobachtetem und erwartetem Wert.
+operator:equals a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:operators ;
+  # Dieses Label benennt den Operator verständlich.
+  skos:prefLabel "ist gleich"@de ;
+  # Diese Definition erklärt die Entscheidung des Operators.
+  skos:definition "Die Prüfung besteht genau dann, wenn beobachteter und erwarteter Wert gleich sind."@de .
+
+# Dieser Adapter prüft eine Erwartung durch eine lokale HTTP-Anfrage.
+adapter:http_request a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:verification-adapters ;
+  # Dieses Label benennt den Adapter verständlich.
+  skos:prefLabel "HTTP-Anfrage"@de ;
+  # Diese Definition erklärt die Aufgabe des Adapters.
+  skos:definition "Ruft eine lokale HTTP-Operation auf und prüft Status sowie Response-Inhalt."@de .
+
+# Dieser Adapter prüft, ob eine Response nur deklarierte Felder enthält.
+adapter:response_schema a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:verification-adapters ;
+  # Dieses Label benennt den Adapter verständlich.
+  skos:prefLabel "Response-Schema"@de ;
+  # Diese Definition erklärt die Aufgabe des Adapters.
+  skos:definition "Vergleicht die ausgegebenen Felder mit dem aufgelösten Schema der Ressource."@de .
+
+# Dieser Adapter prüft eine fachliche Invariante an Domain-Daten.
+adapter:domain_invariant a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:verification-adapters ;
+  # Dieses Label benennt den Adapter verständlich.
+  skos:prefLabel "Domain-Invariante"@de ;
+  # Diese Definition erklärt die Aufgabe des Adapters.
+  skos:definition "Prüft eine Bedingung, die für gültige fachliche Daten immer gelten muss."@de .
+
+# Dieser Adapter sucht ein erwartetes Ereignis im lokalen Audit Trail.
+adapter:audit_log a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:verification-adapters ;
+  # Dieses Label benennt den Adapter verständlich.
+  skos:prefLabel "Audit-Protokoll"@de ;
+  # Diese Definition erklärt die Aufgabe des Adapters.
+  skos:definition "Prüft, ob eine Operation das verlangte nachvollziehbare Audit-Ereignis erzeugt hat."@de .
+
+# Dieser Adapter misst die akzeptierte Anfragerate der lokalen Anwendung.
+adapter:rate_limit a skos:Concept ;
+  # Diese Aussage ordnet den Begriff seinem Glossar-Schema zu.
+  skos:inScheme terms:verification-adapters ;
+  # Dieses Label benennt den Adapter verständlich.
+  skos:prefLabel "Rate-Limit-Prüfung"@de ;
+  # Diese Definition erklärt die Aufgabe des Adapters.
+  skos:definition "Sendet wiederholte Anfragen und prüft die konfigurierte Grenze pro Minute."@de .
+
+# Dieses englische Label ist der stabile kurze Kantenname für defines.
+sf:defines rdfs:label "defines"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für offers.
+sf:offers rdfs:label "offers"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für hasField.
+sf:hasField rdfs:label "has field"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für classifiedAs.
+sf:classifiedAs rdfs:label "classified as"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für actsOn.
+sf:actsOn rdfs:label "acts on"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für returns.
+sf:returns rdfs:label "returns"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für bindsDomain.
+sf:bindsDomain rdfs:label "binds domain"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für bindsImplementation.
+sf:bindsImplementation rdfs:label "binds implementation"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für appliesTo.
+sf:appliesTo rdfs:label "applies to"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für implementedBy.
+sf:implementedBy rdfs:label "implemented by"@en .
+
+# Dieses englische Label ist der stabile kurze Kantenname für verifiedBy.
+sf:verifiedBy rdfs:label "verified by"@en .
+
+# actorType verbindet eine Operation mit dem Typ ihres handelnden Actors.
+sf:actorType a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "actor"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "hat Akteurtyp"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Diese Entität führt die Operation aus."@de .
+
+# derives verbindet eine Rule mit der durch sie abgeleiteten Requirement Instance.
+sf:derives a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "derives"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "leitet ab"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Die Rule leitet diese Requirement Instance aus ihren positiv bekannten Prämissen ab."@de .
+
+# instantiatedAs verbindet eine allgemeine Definition mit ihrer konkreten Instanz.
+sf:instantiatedAs a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "instantiated as"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "instanziiert als"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Aus der allgemeinen Requirement Definition entsteht diese konkrete Requirement Instance."@de .
+
+# matches verbindet eine Prämisse mit der Rule-Bedingung, die sie erfüllt.
+sf:matches a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "matches"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "erfüllt Bedingung"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Diese Assertion erfüllt eine konkrete positiv formulierte Bedingung der Rule."@de .
+
+# provides verbindet ein Pattern mit einer von ihm bereitgestellten Verification.
+sf:provides a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "provides"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "stellt bereit"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Das Implementation Pattern stellt diese ausführbare Verification bereit."@de .
+
+# touches verbindet ein Pattern mit einem betroffenen Softwareartefakt.
+sf:touches a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "touches"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "betrifft"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Die Umsetzung des Patterns verändert oder erzeugt dieses Softwareartefakt."@de .
+
+# Diese lokale Annotation erklärt die standardisierte allgemeine Package-Abhängigkeit.
+dcterms:requires a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "depends on"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "benötigt"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Das Product oder Package lädt diese exakt versionierte Knowledge-Abhängigkeit."@de .
+
+# Diese lokale Annotation erklärt die standardisierte Enthaltensein-Beziehung.
+dcterms:hasPart a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "contains"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "enthält"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Das Knowledge Package enthält diese fachlich adressierbare Definition."@de .
+
+# Diese lokale Annotation erklärt die standardisierte formale Unterklassenbeziehung.
+rdfs:subClassOf a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "is a"@en ;
+  # Dieses deutsche Label erklärt die Richtung der Beziehung.
+  rdfs:label "ist Unterklasse von"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Der Typ ist eine formale Spezialisierung des verbundenen Obertyps."@de .
+
+# Diese lokale Annotation erklärt die für Beweisprämissen verwendete PROV-Beziehung.
+prov:wasDerivedFrom a rdf:Property ;
+  # Dieses englische Label ist der kurze Kantenname im Explorer.
+  rdfs:label "supports"@en ;
+  # Dieses deutsche Label erklärt die Rolle in einem Beweispfad.
+  rdfs:label "stützt"@de ;
+  # Diese Definition erläutert die fachliche Bedeutung der Beziehung.
+  rdfs:comment "Diese Assertion ist eine Prämisse für die abgeleitete Assertion."@de .
+
+# Eine Datalog Rule ist eine normalisierte ausführbare Verzweigung einer RIF Rule.
+sf:DatalogRule a rdfs:Class ;
+  # Dieses Label benennt die interne, aber exportierte Rule-Projektion.
+  rdfs:label "Datalog Rule"@de .
+
+# Ein positives Atom verlangt eine ausdrücklich bekannte Relation ohne Negation.
+sf:PositiveAtom a rdfs:Class ;
+  # Dieses Label benennt eine positive Rule-Bedingung.
+  rdfs:label "Positives Atom"@de .
+
+# arguments speichert die geordnete Argumentprojektion eines Rule-Terms.
+sf:arguments a rdf:Property ;
+  # Diese Definition erklärt den technischen Inhalt der Projektion.
+  rdfs:comment "Enthält die geordneten Argumente eines positiven Atoms oder Vergleichs."@de .
+
+# bindings speichert die konkreten Variablenbindungen einer Ableitung.
+sf:bindings a rdf:Property ;
+  # Diese Definition erklärt den technischen Inhalt der Projektion.
+  rdfs:comment "Enthält die Variablenwerte, mit denen eine Rule erfolgreich angewendet wurde."@de .
+
+# bodyTerm ordnet einer normalisierten Rule eine ihrer WENN-Bedingungen zu.
+sf:bodyTerm a rdf:Property ;
+  # Diese Definition erklärt die Richtung der Beziehung.
+  rdfs:comment "Verbindet eine Datalog Rule mit einem geordneten Body-Term."@de .
+
+# containsClassification ist die abgeleitete Klassifikation einer enthaltenen Ressource.
+sf:containsClassification a rdf:Property ;
+  # Diese Definition erklärt die positive abgeleitete Aussage.
+  rdfs:comment "Die Ressource enthält mindestens ein Feld oder einen Typ mit dieser Klassifikation."@de .
+
+# contentHash enthält den kanonischen semantischen SHA-256-Hash.
+sf:contentHash a rdf:Property ;
+  # Diese Definition grenzt den Hash von einem Datei-Hash ab.
+  rdfs:comment "Identifiziert den fachlichen Inhalt nach RDFC-1.0-Kanonisierung."@de .
+
+# hashAlgorithm benennt das für einen Content Hash verwendete Verfahren.
+sf:hashAlgorithm a rdf:Property ;
+  # Diese Definition macht den gespeicherten Hashalgorithmus überprüfbar.
+  rdfs:comment "Benennt die Kanonisierung und Hashfunktion eines Content Hashs."@de .
+
+# headArguments speichert die geordneten Argumente einer Rule-Schlussfolgerung.
+sf:headArguments a rdf:Property ;
+  # Diese Definition erklärt die technische Rule-Projektion.
+  rdfs:comment "Enthält die geordneten Argumente des DANN-Atoms einer Rule."@de .
+
+# headRelation benennt die erzeugte Relation einer Rule-Schlussfolgerung.
+sf:headRelation a rdf:Property ;
+  # Diese Definition erklärt die technische Rule-Projektion.
+  rdfs:comment "Benennt das Prädikat, das eine erfolgreiche Rule neu ableitet."@de .
+
+# origin klassifiziert eine Assertion als deklariert, normalisiert oder abgeleitet.
+sf:origin a rdf:Property ;
+  # Diese Definition erklärt die Herkunftskategorie einer Assertion.
+  rdfs:comment "Kennzeichnet, in welcher Compilerphase eine Assertion entstanden ist."@de .
+
+# position bewahrt die Reihenfolge eines Terms in einem Rule Body.
+sf:position a rdf:Property ;
+  # Diese Definition erklärt die numerische Ordnungsangabe.
+  rdfs:comment "Enthält den nullbasierten Platz eines Terms innerhalb einer Rule."@de .
+
+# relationName enthält den lokalen Namen einer normalisierten Datalog-Relation.
+sf:relationName a rdf:Property ;
+  # Diese Definition erklärt die technische Rule-Projektion.
+  rdfs:comment "Benennt die positive Relation eines normalisierten Atoms."@de .
+
+# sourceRule verbindet eine normalisierte Branch Rule mit ihrer normativen RIF Rule.
+sf:sourceRule a rdf:Property ;
+  # Diese Definition bewahrt die Verbindung zur normativen Rule-Ressource.
+  rdfs:comment "Verweist von einer ausführbaren Branch-Projektion auf ihre normative RIF Rule."@de .
+
+# usedRule benennt die Rule, die eine konkrete Ableitung erzeugt hat.
+sf:usedRule a rdf:Property ;
+  # Diese Definition macht den Beweispfad maschinenlesbar.
+  rdfs:comment "Verbindet eine qualifizierte Ableitung mit der tatsächlich angewendeten Rule."@de .
+
+# Diese Ressource bezeichnet den deterministischen SpecForge Compiler als PROV Agent.
+sf:compiler a prov:SoftwareAgent ;
+  # Dieses Label benennt den erzeugenden Software-Agenten verständlich.
+  rdfs:label "SpecForge Compiler"@de .

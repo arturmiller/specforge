@@ -1,0 +1,11 @@
+# Liefert Erzeugungsaktivitäten und Quellen für Ressourcen mit PROV-Herkunft.
+SELECT ?entity ?activity ?source WHERE {
+  # Beide Herkunftsbeziehungen sind optional und können in jedem lokalen Graph vorkommen.
+  GRAPH ?graph {
+    # Diese Beziehung nennt die Aktivität, die eine Ressource erzeugt hat.
+    OPTIONAL { ?entity prov:wasGeneratedBy ?activity . }
+    # Diese Beziehung nennt die Quelle, aus der eine Ressource abgeleitet wurde.
+    OPTIONAL { ?entity prov:wasDerivedFrom ?source . }
+  }
+}
+ORDER BY ?entity ?activity ?source

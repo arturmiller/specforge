@@ -1,0 +1,151 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix pattern: <https://specforge.dev/pattern/> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix stack: <https://specforge.dev/stack/> .
+@prefix binding: <https://specforge.dev/control-binding/> .
+@prefix constraint: <https://specforge.dev/constraint/> .
+
+# Dieses Pattern realisiert Authentifizierung und Ownership-Prüfung mit einem Bearer-Mechanismus.
+pattern:fastapi-bearer-ownership a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/bearer-ownership" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "1.0.0" ;
+    # Diese Aussage verbindet das Product mit seinem technischen Stack.
+    sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:SEC-001, requirement:SEC-002 ;
+    # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+    sf:controlBinding binding:authentication, binding:authorization ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-SEC-001, verification:TEST-SEC-002 ;
+    # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+    sf:artifact "backend/app.py" .
+
+# Dieses Binding verlangt Authentifizierung.
+binding:authentication a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/authentication> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "required" .
+
+# Dieses Binding verlangt Ownership-basierte Autorisierung.
+binding:authorization a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/authorization> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "ownership" .
+
+# Dieses Pattern begrenzt Responses auf deklarierte Resource-Felder.
+pattern:fastapi-declared-response-schema a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/declared-response-schema" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "1.0.0" ;
+    # Diese Aussage verbindet das Product mit seinem technischen Stack.
+    sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:PRIVACY-001 ;
+    # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+    sf:controlBinding binding:response-data-minimization ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-PRIVACY-001 ;
+    # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+    sf:artifact "backend/app.py" .
+
+# Dieses Binding verlangt ausschließlich deklarierte Response-Felder.
+binding:response-data-minimization a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/response_data_minimization> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue "declared_fields_only" .
+
+# Dieses Pattern schreibt strukturierte Audit Events für erlaubte und abgelehnte Zugriffe.
+pattern:fastapi-audit-resource-access a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/audit-resource-access" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "2.0.0" ;
+    # Diese Aussage benennt das verantwortliche Team oder den Herausgeber.
+    dcterms:publisher "platform-team" ;
+    # Diese Aussage verbindet das Product mit seinem technischen Stack.
+    sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:OBS-001 ;
+    # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+    sf:controlBinding binding:audit-events ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-OBS-001 ;
+    # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+    sf:artifact "backend/app.py" ;
+  # Diese Aussage verbindet das Pattern mit einer Anwendbarkeitsbedingung.
+  sf:constraint constraint:audit-required, constraint:audit-forbidden ;
+    # Diese Aussage gibt einen verständlichen Umsetzungshinweis.
+    sf:recommendation "Use structured audit events."@en .
+
+# Dieses Binding verlangt Audit Events für beide Zugriffsergebnisse.
+binding:audit-events a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/audit_events> ;
+  # Dieser Listenwert ist ein weiterer ausdrücklich erwarteter Wert.
+  sf:expectedValueList ( "access_granted" "access_denied" ) .
+
+# Diese Constraint verlangt aufgezeichnete erfolgreiche und abgelehnte Ressourcenzugriffe.
+constraint:audit-required a sf:PatternConstraint ;
+  # Diese Aussage klassifiziert die Art der Pattern-Constraint.
+  sf:constraintKind "required" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Granted and denied resource access is recorded."@en .
+
+# Diese Constraint verbietet Secrets in Audit Records.
+constraint:audit-forbidden a sf:PatternConstraint ;
+  # Diese Aussage klassifiziert die Art der Pattern-Constraint.
+  sf:constraintKind "forbidden" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Secrets are written to audit records."@en .
+
+# Dieses Pattern begrenzt authentifizierte Reads serverseitig.
+pattern:fastapi-read-rate-limit a sf:ImplementationPattern ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "fastapi/read-rate-limit" ;
+    # Diese Aussage pinnt die konkrete Version der Ressource.
+    dcterms:hasVersion "2.0.0" ;
+    # Diese Aussage benennt das verantwortliche Team oder den Herausgeber.
+    dcterms:publisher "platform-team" ;
+    # Diese Aussage verbindet das Product mit seinem technischen Stack.
+    sf:usesStack stack:fastapi-react ;
+  # Diese Aussage benennt das vom Pattern erfüllte Requirement.
+  sf:satisfies requirement:PLATFORM-001 ;
+    # Dieses weitere Binding realisiert ebenfalls einen erwarteten Control-Wert.
+    sf:controlBinding binding:rate-limit ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PLATFORM-001 ;
+    # Dieses weitere Softwareartefakt ist ebenfalls vom Pattern betroffen.
+    sf:artifact "backend/app.py" ;
+  # Diese Aussage verbindet das Pattern mit einer Anwendbarkeitsbedingung.
+  sf:constraint constraint:rate-required, constraint:rate-forbidden ;
+    # Diese Aussage gibt einen verständlichen Umsetzungshinweis.
+    sf:recommendation "Partition counters by authenticated actor."@en .
+
+# Dieses Binding setzt das Rate Limit auf sechzig Requests pro Minute.
+binding:rate-limit a sf:ControlBinding ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+  sf:control <https://specforge.dev/control/rate_limit> ;
+  # Diese Aussage legt den einzelnen erwarteten Control-Wert fest.
+  sf:expectedValue 60 .
+
+# Diese Constraint verlangt eine serverseitige Begrenzung authentifizierter Reads.
+constraint:rate-required a sf:PatternConstraint ;
+  # Diese Aussage klassifiziert die Art der Pattern-Constraint.
+  sf:constraintKind "required" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Authenticated reads are rate limited server-side."@en .
+
+# Diese Constraint verbietet das Vertrauen in clientseitige Rate Counter.
+constraint:rate-forbidden a sf:PatternConstraint ;
+  # Diese Aussage klassifiziert die Art der Pattern-Constraint.
+  sf:constraintKind "forbidden" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Client-provided rate counters are trusted."@en .

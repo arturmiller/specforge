@@ -1,0 +1,57 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# DATA-001 beschreibt die überprüfbare Erwartung: Event end must be later than event start.
+requirement:DATA-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "DATA-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Event end must be later than event start." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/event_time_interval> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "end_after_start" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-DATA-001 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:calendar-invariants-event-time .
+
+# Diese Verification führt TEST-DATA-001 mit dem Adapter domain_invariant aus.
+verification:TEST-DATA-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-DATA-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/domain_invariant> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "invalid_interval" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-DATA-001 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-DATA-001.
+assertion:TEST-DATA-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus "422"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:invariant "end > start" .
+
+# Diese Quelle bezeichnet den normativen Abschnitt event-time in calendar-invariants.
+source:calendar-invariants-event-time a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "architecture_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-invariants" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "event-time" .

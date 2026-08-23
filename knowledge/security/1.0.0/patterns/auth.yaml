@@ -1,8 +1,0 @@
-id: fastapi/bearer-ownership
-version: "1.0.0"
-satisfies: [SEC-001, SEC-002]
-stack: fastapi-react
-controls: {authentication: required, authorization: ownership}
-verifications: [TEST-SEC-001, TEST-SEC-002]
-artifacts: [backend/app.py]
-

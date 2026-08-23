@@ -1,8 +1,0 @@
-name: calendar-fastapi-react
-version: "1.0.0"
-owner: calendar-team
-kind: integration
-purpose: Connects Calendar domain requirements to FastAPI and React patterns.
-integrates:
-  domain: {package: calendar, version: "1.1.0"}
-  implementation: {package: fastapi-react, version: "1.0.0"}

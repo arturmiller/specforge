@@ -17,7 +17,7 @@ Diese Matrix verbindet die zwölf Conformance-Kriterien aus
 | 8 | RIF Core | `rif.export_rules` / `rif.import_rules`; Roundtrip- und CLI-Test |
 | 9 | SPARQL | `SemanticDataset.query`, versionierte Views und `specforge sparql`; Query-/CLI-Tests |
 | 10 | RDFC-1.0 + SHA-256 | `rdfcanon`, `rdfc-1.0+sha256`; Isomorphie- und Roundtrip-Tests |
-| 11 | YAML und JSON-LD semantisch gleich | YAML-Resolve → JSON-LD → RDF-Roundtrip mit identischem Dataset-Hash |
+| 11 | Standardquellen ohne proprietären Autorenparser | Calendar-Resolve aus TriG/Turtle/RIF → JSON-LD- und N-Quads-Roundtrips mit identischem Dataset-Hash; YAML nur im getrennten Migrationsbefehl |
 | 12 | Ohne Graphdatenbank | RDFLib Dataset im Prozess; gesamte Testsuite benötigt keinen externen Dienst |
 
 Die bisherige JSON-, Trace- und Evidence-Struktur bleibt als

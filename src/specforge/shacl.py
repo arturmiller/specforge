@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from hashlib import sha256
+from pathlib import Path
 
 from pyshacl import validate
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
@@ -42,6 +43,16 @@ def metamodel_shapes() -> Graph:
     return graph
 
 
+def authoring_shapes() -> Graph:
+    """Load the same published SHACL Core contract used by external tools."""
+    repository_copy = Path(__file__).parents[2] / "vocabulary" / "1.0.0" / "shapes.ttl"
+    bundled_copy = Path(__file__).with_name("vocabulary") / "1.0.0" / "shapes.ttl"
+    source = repository_copy if repository_copy.exists() else bundled_copy
+    if not source.exists():
+        raise FileNotFoundError("published SpecForge authoring shapes are missing")
+    return Graph().parse(source, format="turtle")
+
+
 @dataclass(frozen=True)
 class ShaclResult:
     conforms: bool
@@ -50,13 +61,18 @@ class ShaclResult:
 
 
 def validate_dataset(dataset: SemanticDataset) -> ShaclResult:
+    return validate_graph(dataset.dataset)
+
+
+def validate_graph(data_graph, *, authoring: bool = False) -> ShaclResult:
+    """Validate a source or resolved RDF graph against the public Core contract."""
     conforms, report_graph, report_text = validate(
-        data_graph=dataset.dataset,
-        shacl_graph=metamodel_shapes(),
+        data_graph=data_graph,
+        shacl_graph=authoring_shapes() if authoring else metamodel_shapes(),
         advanced=False,
         allow_infos=False,
         allow_warnings=False,
-        meta_shacl=True,
+        meta_shacl=False,
         inference="none",
     )
     report_nodes = set(report_graph.subjects(RDF.type, SH.ValidationReport))

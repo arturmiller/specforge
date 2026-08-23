@@ -1,0 +1,207 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# PRODUCT-001 beschreibt die überprüfbare Erwartung: A user can create an event.
+requirement:PRODUCT-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PRODUCT-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "A user can create an event." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/event_create> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "enabled" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PRODUCT-001 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:calendar-product-create .
+
+# Diese Verification führt TEST-PRODUCT-001 mit dem Adapter http_request aus.
+verification:TEST-PRODUCT-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PRODUCT-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "owner_create" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-PRODUCT-001 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-PRODUCT-001.
+assertion:TEST-PRODUCT-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus "201"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:storedMatches "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+# Diese Quelle bezeichnet den normativen Abschnitt create in calendar-product.
+source:calendar-product-create a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "product_spec" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-product" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "create" .
+
+# PRODUCT-002 beschreibt die überprüfbare Erwartung: A user can read an owned event.
+requirement:PRODUCT-002-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PRODUCT-002" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "A user can read an owned event." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/event_read> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "enabled" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PRODUCT-002 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:calendar-product-read .
+
+# Diese Verification führt TEST-PRODUCT-002 mit dem Adapter http_request aus.
+verification:TEST-PRODUCT-002 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PRODUCT-002" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "owner_read" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-PRODUCT-002 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-PRODUCT-002.
+assertion:TEST-PRODUCT-002 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus "200"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:resourceMatches "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+# Diese Quelle bezeichnet den normativen Abschnitt read in calendar-product.
+source:calendar-product-read a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "product_spec" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-product" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "read" .
+
+# PRODUCT-003 beschreibt die überprüfbare Erwartung: A user can update an owned event.
+requirement:PRODUCT-003-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PRODUCT-003" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "A user can update an owned event." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/event_update> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "enabled" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PRODUCT-003 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:calendar-product-update .
+
+# Diese Verification führt TEST-PRODUCT-003 mit dem Adapter http_request aus.
+verification:TEST-PRODUCT-003 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PRODUCT-003" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "owner_update" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-PRODUCT-003 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-PRODUCT-003.
+assertion:TEST-PRODUCT-003 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus "200"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:storedMatches "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+
+# Diese Quelle bezeichnet den normativen Abschnitt update in calendar-product.
+source:calendar-product-update a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "product_spec" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-product" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "update" .
+
+# PRODUCT-004 beschreibt die überprüfbare Erwartung: A user can delete an owned event.
+requirement:PRODUCT-004-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "PRODUCT-004" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "A user can delete an owned event." ;
+    # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft per IRI.
+    sf:control <https://specforge.dev/control/event_delete> ;
+    # Diese Aussage legt den Vergleichsoperator der Erwartung per IRI fest.
+    sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "enabled" ;
+    # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+    sf:verifiedBy verification:TEST-PRODUCT-004 ;
+    # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+    prov:wasDerivedFrom source:calendar-product-delete .
+
+# Diese Verification führt TEST-PRODUCT-004 mit dem Adapter http_request aus.
+verification:TEST-PRODUCT-004 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-PRODUCT-004" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter per IRI.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die notwendige Vorbereitung der Verification.
+  sf:setup "owner_delete" ;
+  # Diese Aussage legt fest, ob die Verification verpflichtend ist.
+  sf:mandatory "true"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Assertion.
+  sf:assertion assertion:TEST-PRODUCT-004 .
+
+# Diese Assertion beschreibt die maschinenlesbaren Erwartungen von TEST-PRODUCT-004.
+assertion:TEST-PRODUCT-004 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus "204"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:afterStatus "404"^^<http://www.w3.org/2001/XMLSchema#integer> .
+
+# Diese Quelle bezeichnet den normativen Abschnitt delete in calendar-product.
+source:calendar-product-delete a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "product_spec" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "calendar-product" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage benennt den relevanten Abschnitt der Herkunftsquelle.
+  sf:sourceSection "delete" .

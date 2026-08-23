@@ -1,0 +1,152 @@
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix academy: <https://specforge.dev/academy/glossary/> .
+
+# Dieses Scheme enthält die app-unabhängigen Begriffe der geführten Lernreise.
+academy:scheme a skos:ConceptScheme ;
+  # Diese Kennung verbindet das Glossar mit der Academy-Ansicht.
+  dcterms:identifier "academy" .
+
+# Compiler bezeichnet das deterministische Übersetzungsprogramm von SpecForge.
+academy:Compiler a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Compiler"@de ;
+  # Diese Definition erklärt die Rolle des Compilers in SpecForge.
+  skos:definition "Ein Programm, das strukturierte Eingaben nach festen Regeln in andere strukturierte Artefakte übersetzt. Hier: Product- und Knowledge-Daten in deterministische Requirements und Aufträge."@de .
+
+# Control bezeichnet die von einem Requirement gesteuerte Systemeigenschaft.
+academy:Control a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Control"@de ;
+  # Diese Definition erklärt die Rolle eines Controls.
+  skos:definition "Die benannte Eigenschaft, die ein Requirement für sein Target steuert, zum Beispiel response_data_minimization."@de .
+
+# Evidence bezeichnet maschinenlesbare Belege eines konkreten Prüflaufs.
+academy:Evidence a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Evidence"@de ;
+  # Diese Definition erklärt den begrenzten Aussagewert von Evidence.
+  skos:definition "Maschinenlesbare Belege, die eine konkrete Prüfung mit Erwartung, Beobachtung, Codezustand und Ergebnis verbinden."@de .
+
+# Fact bezeichnet eine bekannte und adressierbare fachliche Aussage.
+academy:Fact a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Fact"@de ;
+  # Diese Definition erklärt deklarierte und abgeleitete Facts gemeinsam.
+  skos:definition "Eine bekannte, adressierbare Aussage, die deklariert oder nachvollziehbar abgeleitet wurde."@de .
+
+# Implementation Pattern bezeichnet eine stackbezogene technische Umsetzung.
+academy:ImplementationPattern a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Implementation Pattern"@de ;
+  # Diese Definition grenzt Umsetzung von Anwendbarkeit ab.
+  skos:definition "Technische Guidance für die Umsetzung eines Requirements in einem passenden Stack; es entscheidet nicht, ob das Requirement gilt."@de .
+
+# Knowledge Package bezeichnet eine versionierte Einheit wiederverwendbaren Wissens.
+academy:KnowledgePackage a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Knowledge Package"@de ;
+  # Diese Definition erklärt den möglichen Inhalt eines Packages.
+  skos:definition "Versioniertes Paket mit wiederverwendbaren Requirements, Rules, Begriffen oder technischen Patterns."@de .
+
+# Operation bezeichnet eine ausführbare fachliche Aktion eines Products.
+academy:Operation a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Operation"@de ;
+  # Diese Definition erklärt Operationen als mögliche Requirement Targets.
+  skos:definition "Eine ausführbare Aktion des Products, beispielsweise create_event oder read_event. Sie kann das Target eines Requirements sein."@de .
+
+# Pattern bezeichnet technische Guidance mit maschinenlesbaren Bindungen.
+academy:Pattern a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Pattern"@de ;
+  # Diese Definition erklärt die Bestandteile eines Patterns.
+  skos:definition "Technische Guidance mit Voraussetzungen, Empfehlungen, Verboten und Verifikationsbezügen."@de .
+
+# Product Spec bezeichnet das konkrete fachliche Anwendungsmodell.
+academy:ProductSpec a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Product Spec"@de ;
+  # Diese Definition erklärt den Inhalt einer Product Spec.
+  skos:definition "Maschinenlesbare Beschreibung des konkreten Products: Entities, Fields, Operationen und weitere Facts."@de .
+
+# Provenance bezeichnet die nachvollziehbare Herkunft einer Aussage.
+academy:Provenance a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Provenance"@de ;
+  # Diese Definition erklärt die Fragen, welche Provenance beantwortet.
+  skos:definition "Nachvollziehbare Herkunft: Welche Rule, Package-Version und Aussage führte zu diesem Ergebnis?"@de .
+
+# Requirement bezeichnet eine überprüfbare Erwartung an das System.
+academy:Requirement a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Requirement"@de ;
+  # Diese Definition erklärt den Kern eines Requirements.
+  skos:definition "Eine überprüfbare Anforderung an das System."@de .
+
+# Requirement Definition bezeichnet die allgemeine Form einer Anforderung.
+academy:RequirementDefinition a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Requirement Definition"@de ;
+  # Diese Definition grenzt die allgemeine Definition von ihrer Instanz ab.
+  skos:definition "Die allgemeine, technologieunabhängige Form einer Anforderung."@de .
+
+# Requirement Instance bezeichnet eine Definition an einem konkreten Target.
+academy:RequirementInstance a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Requirement Instance"@de ;
+  # Diese Definition erklärt die konkrete Anwendung einer Definition.
+  skos:definition "Eine Requirement Definition, angewendet auf genau ein typisiertes Target."@de .
+
+# Rule bezeichnet eine maschinenlesbare positive WENN-DANN-Ableitung.
+academy:Rule a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Rule"@de ;
+  # Diese Definition erklärt, dass eine Rule Anwendbarkeit und nicht Umsetzung entscheidet.
+  skos:definition "Eine maschinenlesbare Wenn-dann-Regel, die anhand von Product Facts entscheidet, ob ein Requirement für ein bestimmtes Target gilt."@de .
+
+# Target bezeichnet das konkrete Bezugsobjekt einer Requirement Instance.
+academy:Target a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Target"@de ;
+  # Diese Definition erklärt ein Target anhand einer konkreten Operation.
+  skos:definition "Das konkrete Objekt, auf das eine Anforderung wirkt, etwa operation:read_event."@de .
+
+# Verification bezeichnet eine konkrete maschinenentscheidbare Prüfung.
+academy:Verification a skos:Concept ;
+  # Diese Aussage ordnet den Begriff dem Academy-Glossar zu.
+  skos:inScheme academy:scheme ;
+  # Dieses Label ist der sichtbare Name des Begriffs.
+  skos:prefLabel "Verification"@de ;
+  # Diese Definition erklärt den Vergleich von Erwartung und Beobachtung.
+  skos:definition "Eine konkrete maschinelle Prüfung, die eine Erwartung mit einer Beobachtung am Modell oder an der Anwendung vergleicht."@de .

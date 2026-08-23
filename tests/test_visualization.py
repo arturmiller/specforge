@@ -104,7 +104,8 @@ def test_academy_glossaries_are_embedded_in_the_explorer() -> None:
     assert glossary["Rule"].startswith("Eine maschinenlesbare Wenn-dann-Regel")
     assert glossary["Operation"].startswith("Eine ausführbare Aktion")
     assert product_glossary["Event"].startswith("Eine fachliche Entität")
-    assert graph["glossary"] == {**glossary, **product_glossary}
+    assert {**glossary, **product_glossary}.items() <= graph["glossary"].items()
+    assert graph["glossary"]["Datenminimierung der Response"].startswith("Gibt in einer Response")
     assert graph["glossaryKinds"]["Rule"] == "academy"
     assert graph["glossaryKinds"]["Event"] == "product"
 
@@ -197,9 +198,9 @@ def test_every_relationship_has_a_hover_explanation() -> None:
     labels = {edge["label"] for edge in graph["edges"]}
 
     assert labels <= RELATIONSHIP_GLOSSARY.keys()
-    assert RELATIONSHIP_GLOSSARY["defines"].startswith("Das Produkt definiert")
-    assert RELATIONSHIP_GLOSSARY["offers"].startswith("Das Produkt stellt")
-    assert RELATIONSHIP_GLOSSARY["depends on"].startswith("Das Produkt lädt")
+    assert RELATIONSHIP_GLOSSARY["defines"].startswith("Das Product definiert")
+    assert RELATIONSHIP_GLOSSARY["offers"].startswith("Das Product bietet")
+    assert RELATIONSHIP_GLOSSARY["depends on"].startswith("Das Product oder Package lädt")
 
     html = create_visualization(ROOT, PRODUCT).read_text(encoding="utf-8")
     assert 'class="edge-label" tabindex="0"' in html

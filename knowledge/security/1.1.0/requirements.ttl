@@ -1,0 +1,103 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# SEC-001 fordert Authentifizierung für Ressourcen mit personenbezogenen Daten.
+requirement:SEC-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "SEC-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Resources containing PersonalData require authenticated access."@en ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft.
+  sf:control <https://specforge.dev/control/authentication> ;
+  # Diese Aussage legt den Vergleichsoperator der Erwartung fest.
+  sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "required" ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-SEC-001 ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:security-policy-authenticated-personal-data .
+
+# Diese Verification erwartet für anonyme CRUD-Zugriffe eine HTTP-401-Antwort.
+verification:TEST-SEC-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-SEC-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die Vorbereitung der Verification.
+  sf:setup "anonymous_all_crud" ;
+  # Diese Aussage kennzeichnet einen verpflichtenden Vorbereitungsschritt.
+  sf:mandatory true ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Behauptung.
+  sf:assertion assertion:TEST-SEC-001 .
+
+# Diese Assertion beschreibt den erwarteten HTTP-Status für fehlende Authentifizierung.
+assertion:TEST-SEC-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus 401 .
+
+# SEC-002 fordert, dass User nur auf eigene Ressourcen zugreifen dürfen.
+requirement:SEC-002-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "SEC-002" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Users may access only resources they own."@en ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft.
+  sf:control <https://specforge.dev/control/authorization> ;
+  # Diese Aussage legt den Vergleichsoperator der Erwartung fest.
+  sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt den einzelnen erwarteten Wert fest.
+  sf:expectedValue "ownership" ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-SEC-002 ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:security-policy-ownership .
+
+# Diese Verification erwartet für fremde Ressourcen eine verbergende HTTP-404-Antwort.
+verification:TEST-SEC-002 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-SEC-002" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/http_request> ;
+  # Diese Aussage beschreibt die Vorbereitung der Verification.
+  sf:setup "foreign_user_all_crud" ;
+  # Diese Aussage kennzeichnet einen verpflichtenden Vorbereitungsschritt.
+  sf:mandatory true ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Behauptung.
+  sf:assertion assertion:TEST-SEC-002 .
+
+# Diese Assertion beschreibt den erwarteten HTTP-Status für fremde Ressourcen.
+assertion:TEST-SEC-002 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:responseStatus 404 .
+
+# Diese Quelle verweist auf den Authentifizierungsabschnitt der Security Policy.
+source:security-policy-authenticated-personal-data a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "authenticated-personal-data" .
+
+# Diese Quelle verweist auf den Ownership-Abschnitt der Security Policy.
+source:security-policy-ownership a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "security-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "ownership" .

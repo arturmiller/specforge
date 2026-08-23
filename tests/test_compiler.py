@@ -5,7 +5,8 @@ import pytest
 
 from specforge.compiler import Compiler
 from specforge.errors import SpecForgeError
-from specforge.model import Condition, Fact, FactOrigin, PackageManifest
+from specforge.model import FactOrigin, PackageManifest
+from specforge.rdf_authoring import load_requirements, migrate_legacy_product
 
 
 ROOT = Path(__file__).parents[1]
@@ -67,16 +68,15 @@ def test_product_stack_selects_patterns_from_implementation_package():
 
     assert result.product.stack == "fastapi-react"
     assert all(item.pattern and item.pattern.startswith("fastapi/") for item in result.requirements)
-    assert not list((ROOT / "knowledge/privacy/1.1.0/patterns").glob("*.yaml"))
-    assert (ROOT / "knowledge/fastapi-react/1.0.0/package.yaml").exists()
+    assert not list((ROOT / "knowledge").rglob("*.yaml"))
+    assert (ROOT / "knowledge/fastapi-react/1.0.0/package.trig").exists()
 
 
 def test_privacy_rule_resolves_for_a_non_calendar_product(tmp_path: Path):
     shutil.copytree(ROOT / "knowledge/privacy", tmp_path / "knowledge/privacy")
     shutil.copytree(ROOT / "knowledge/fastapi-react", tmp_path / "knowledge/fastapi-react")
-    product = tmp_path / "products/documents/product.yaml"
-    product.parent.mkdir(parents=True)
-    product.write_text(
+    legacy = tmp_path / "legacy-product.yaml"
+    legacy.write_text(
         """schema_version: "2"
 product: {id: documents, version: "1.0.0", stack: fastapi-react}
 entities:
@@ -92,6 +92,8 @@ knowledge_dependencies: {fastapi-react: "1.0.0", privacy: "1.1.0"}
 """,
         encoding="utf-8",
     )
+    product = tmp_path / "products/documents/product.trig"
+    migrate_legacy_product(legacy, product)
 
     result = Compiler(tmp_path).resolve("products/documents", write=False)
 
@@ -104,8 +106,8 @@ knowledge_dependencies: {fastapi-react: "1.0.0", privacy: "1.1.0"}
 def test_unknown_product_stack_cannot_select_fastapi_patterns(tmp_path: Path):
     shutil.copytree(ROOT / "knowledge", tmp_path / "knowledge")
     shutil.copytree(ROOT / "products", tmp_path / "products")
-    product = tmp_path / "products/calendar/product.yaml"
-    product.write_text(product.read_text(encoding="utf-8").replace("stack: fastapi-react", "stack: django"), encoding="utf-8")
+    product = tmp_path / "products/calendar/product.trig"
+    product.write_text(product.read_text(encoding="utf-8").replace("stack:fastapi-react", "stack:django"), encoding="utf-8")
 
     with pytest.raises(SpecForgeError) as caught:
         Compiler(tmp_path).resolve("products/calendar", write=False)
@@ -123,11 +125,11 @@ def test_integration_manifest_requires_both_package_roles():
 def test_integration_manifest_requires_exact_active_dependency_version(tmp_path: Path):
     shutil.copytree(ROOT / "knowledge", tmp_path / "knowledge")
     shutil.copytree(ROOT / "products", tmp_path / "products")
-    manifest = tmp_path / "knowledge/calendar-fastapi-react/1.0.0/package.yaml"
+    manifest = tmp_path / "knowledge/calendar-fastapi-react/1.0.0/package.trig"
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
-            'domain: {package: calendar, version: "1.1.0"}',
-            'domain: {package: calendar, version: "9.9.9"}',
+            'package/calendar/1.1.0',
+            'package/calendar/9.9.9',
         ),
         encoding="utf-8",
     )
@@ -147,7 +149,7 @@ def test_explain_has_full_security_derivation_and_verification():
     assert "Event contains_classification 'PersonalData'" in explanation
     assert "field-classification-propagation" not in explanation  # facts, not internal implementation details
     assert "TEST-SEC-001@operation:read_event (http_request)" in explanation
-    assert "product.yaml#/operations/read_event" in explanation
+    assert "product.trig#/operations/read_event" in explanation
 
 
 def test_explain_can_filter_by_typed_target():
@@ -187,26 +189,14 @@ def test_generated_compiler_json_is_pretty_printed():
         assert content == __import__("json").dumps(__import__("json").loads(content), ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
-def test_legacy_match_projection_still_reads_all_any_not_and_equals():
-    compiler = Compiler(ROOT)
-    facts = [Fact(id="f1", subject="x", predicate="kind", object="Event", origin=FactOrigin.DECLARED, provenance="test")]
-    condition = Condition.model_validate({
-        "all": [
-            {"any": [{"fact": {"subject": "$x", "predicate": "kind", "object": "Event"}}, {"equals": [1, 2]}]},
-            {"not": {"fact": {"subject": "$x", "predicate": "public", "object": True}}},
-            {"equals": ["$x", "x"]},
-        ]
-    })
-    matches = compiler.match(condition, facts, {})
-    assert matches[0][0] == {"x": "x"}
-    assert [fact.id for fact in matches[0][1]] == ["f1"]
-
-
 def test_requirement_without_executable_verification_is_rejected(tmp_path: Path):
-    path = tmp_path / "invalid.yaml"
-    path.write_text("id: BAD\nversion: '1'\nstatement: vague\nexpectation: {control: x, operator: equals, value: y}\nverifications: []\nsource: {type: t, document: d, version: v, section: s}\n", encoding="utf-8")
-    from specforge.model import RequirementDefinition
+    path = tmp_path / "requirements.ttl"
+    path.write_text(
+        "@prefix sf: <https://specforge.dev/vocab/> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n"
+        "<urn:bad> a sf:RequirementDefinition ; dcterms:identifier \"BAD\" ; dcterms:description \"vague\" ; sf:control \"x\" ; sf:operator \"equals\" .\n",
+        encoding="utf-8",
+    )
     with pytest.raises(SpecForgeError) as caught:
-        Compiler(tmp_path).load_model(path, RequirementDefinition)
-    assert caught.value.code == "SF1001"
-    assert "SF1101" in str(caught.value)
+        load_requirements(path)
+    assert caught.value.code == "SF3101"
+    assert "verifiedBy" in str(caught.value)

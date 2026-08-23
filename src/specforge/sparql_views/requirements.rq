@@ -1,0 +1,15 @@
+# Liefert aufgelöste Requirements mit Target, ausgewähltem Pattern und Verification.
+SELECT ?instance ?target ?pattern ?verification WHERE {
+  # Jede Requirement Instance wird mit den drei für die Umsetzung relevanten Ressourcen verbunden.
+  GRAPH <https://specforge.dev/graph/resolved> {
+    # Diese Typaussage beschränkt Ergebnisse auf konkrete Requirement Instances.
+    ?instance a sf:RequirementInstance .
+    # appliesTo benennt das konkrete Product-Target.
+    ?instance sf:appliesTo ?target .
+    # implementedBy benennt das ausgewählte technische Pattern.
+    ?instance sf:implementedBy ?pattern .
+    # verifiedBy benennt die ausführbare Prüfung.
+    ?instance sf:verifiedBy ?verification .
+  }
+}
+ORDER BY ?instance ?verification

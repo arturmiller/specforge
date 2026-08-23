@@ -1,7 +1,0 @@
-id: PRODUCT-004
-version: "1.0.0"
-statement: A user can delete an owned event.
-expectation: {control: event_delete, operator: equals, value: enabled}
-verifications:
-  - {id: TEST-PRODUCT-004, adapter: http_request, setup: owner_delete, assertion: {response_status: 204, after_status: 404}}
-source: {type: product_spec, document: calendar-product, version: "1.0.0", section: delete}

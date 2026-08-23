@@ -1,0 +1,55 @@
+@prefix sf: <https://specforge.dev/vocab/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix requirement: <https://specforge.dev/requirement/> .
+@prefix verification: <https://specforge.dev/verification/> .
+@prefix assertion: <https://specforge.dev/assertion/> .
+@prefix source: <https://specforge.dev/source/> .
+
+# OBS-001 fordert Audit Events für erlaubten und abgelehnten Ressourcenzugriff.
+requirement:OBS-001-1.0.0 a sf:RequirementDefinition ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "OBS-001" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage beschreibt die fachliche Bedeutung der Ressource.
+  dcterms:description "Access to personal resources emits an audit event."@en ;
+  # Diese Aussage benennt die maschinenentscheidbare Systemeigenschaft.
+  sf:control <https://specforge.dev/control/audit_events> ;
+  # Diese Aussage legt den Vergleichsoperator der Erwartung fest.
+  sf:operator <https://specforge.dev/operator/equals> ;
+  # Diese Aussage legt eine geordnete Liste erwarteter Werte fest.
+  sf:expectedValueList ( "access_granted" "access_denied" ) ;
+  # Diese Aussage verbindet das Requirement mit einer ausführbaren Verification.
+  sf:verifiedBy verification:TEST-OBS-001 ;
+  # Diese Aussage verweist auf die konkrete Herkunft der Ressource.
+  prov:wasDerivedFrom source:observability-policy-resource-access .
+
+# Diese Verification beobachtet das Audit Log bei einem erlaubten Lesezugriff.
+verification:TEST-OBS-001 a sf:Verification ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "TEST-OBS-001" ;
+  # Diese Aussage benennt den ausführbaren Prüfadapter.
+  sf:verificationAdapter <https://specforge.dev/verification-adapter/audit_log> ;
+  # Diese Aussage beschreibt die Vorbereitung der Verification.
+  sf:setup "owner_read" ;
+  # Diese Aussage kennzeichnet einen verpflichtenden Vorbereitungsschritt.
+  sf:mandatory true ;
+  # Diese Aussage verbindet die Verification mit ihrer prüfbaren Behauptung.
+  sf:assertion assertion:TEST-OBS-001 .
+
+# Diese Assertion erwartet das Audit Event access_granted.
+assertion:TEST-OBS-001 a sf:AssertionSpec ;
+  # Diese weitere Typangabe klassifiziert dieselbe Ressource zusätzlich.
+  sf:auditEvent "access_granted" .
+
+# Diese Quelle verweist auf den Ressourcenzugriffsabschnitt der Observability Policy.
+source:observability-policy-resource-access a prov:Entity ;
+  # Diese Aussage klassifiziert die Art der Herkunftsquelle.
+  sf:sourceType "internal_policy" ;
+  # Diese Aussage legt die stabile Kennung der Ressource fest.
+  dcterms:identifier "observability-policy" ;
+  # Diese Aussage pinnt die konkrete Version der Ressource.
+  dcterms:hasVersion "1.0.0" ;
+  # Diese Aussage lokalisiert die Bedeutung in einem bestimmten Quellabschnitt.
+  sf:sourceSection "resource-access" .

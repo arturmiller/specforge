@@ -1,6 +1,6 @@
 # ADR 0006: Canonical semantic dataset and Datalog
 
-Status: Accepted
+Status: Superseded in its authoring-format decisions by ADR 0007
 
 ## Context
 

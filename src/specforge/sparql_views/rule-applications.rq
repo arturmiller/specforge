@@ -1,0 +1,13 @@
+# Zeigt für jede abgeleitete Requirement Instance die verwendete Rule und deren Prämissen.
+SELECT ?instance ?rule ?premise WHERE {
+  # Eine qualifizierte Ableitung verbindet die Instance mit ihrem Beweis.
+  GRAPH <https://specforge.dev/graph/resolved> {
+    # qualifiedDerivation verweist von der Requirement Instance auf ihren Beweisknoten.
+    ?instance prov:qualifiedDerivation ?derivation .
+    # Die Ableitung benennt die tatsächlich verwendete Rule.
+    ?derivation sf:usedRule ?rule .
+    # Eine Prämisse ist optional, damit auch Ableitungen ohne gespeicherte Prämisse sichtbar bleiben.
+    OPTIONAL { ?derivation prov:entity ?premise . }
+  }
+}
+ORDER BY ?instance ?rule ?premise
